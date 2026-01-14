@@ -1,0 +1,156 @@
+<%# app/views/shifts/suggestions.html.erb %>
+
+<div class="min-h-screen bg-gray-100">
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-4 px-6 shadow-lg">
+    <h1 class="text-xl font-bold">🤖 AI補填提案</h1>
+    <p class="text-sm opacity-90"><%= @date.strftime('%Y年%-m月%-d日（%a）') %></p>
+  </header>
+
+  <div class="max-w-4xl mx-auto px-4 py-6">
+    <!-- 戻るリンク -->
+    <div class="mb-4">
+      <%= link_to shifts_path(date: @date), class: "text-purple-600 hover:underline text-sm" do %>
+        ← 日別ビューに戻る
+      <% end %>
+    </div>
+
+    <!-- サマリー -->
+    <div class="bg-white rounded-xl p-6 shadow mb-6">
+      <h2 class="text-lg font-bold mb-4">📊 本日の状況</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <div class="text-3xl font-bold text-red-500"><%= @shortage_data[:summary][:shortage_stores] %></div>
+          <div class="text-xs text-gray-500">不足店舗</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-green-500"><%= @shortage_data[:summary][:surplus_stores] %></div>
+          <div class="text-xs text-gray-500">余剰店舗</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-yellow-600"><%= @shortage_data[:summary][:total_pharmacist_shortage] %></div>
+          <div class="text-xs text-gray-500">薬剤師不足</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold text-blue-500"><%= @shortage_data[:summary][:total_clerk_shortage] %></div>
+          <div class="text-xs text-gray-500">事務不足</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI提案 -->
+    <div class="bg-white rounded-xl shadow overflow-hidden border-l-4 border-purple-500">
+      <div class="p-6 border-b bg-purple-50">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center text-2xl">
+            🤖
+          </div>
+          <div>
+            <div class="font-bold text-lg">AIによる補填提案</div>
+            <div class="text-sm text-gray-500">最適な人員配置を提案します</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <% if @suggestions.empty? %>
+          <div class="text-center py-8 text-gray-500">
+            <div class="text-4xl mb-2">✅</div>
+            <div>補填の提案はありません</div>
+            <div class="text-sm">すべての店舗が充足しているか、補填候補がいません</div>
+          </div>
+        <% else %>
+          <div class="space-y-4">
+            <% @suggestions.each_with_index do |suggestion, index| %>
+              <div class="bg-gray-50 rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                  <div class="font-medium">
+                    <span class="text-purple-600 font-bold"><%= suggestion[:staff].name %></span>
+                    <span class="text-gray-500">（<%= suggestion[:staff].role_label %>）</span>を
+                  </div>
+                  <div class="text-lg mt-1">
+                    <span class="font-bold"><%= suggestion[:from_store].name %></span>
+                    <span class="mx-2">→</span>
+                    <span class="font-bold text-red-600"><%= suggestion[:to_store].name %></span>
+                    へ移動
+                  </div>
+                  <div class="text-sm text-gray-500 mt-2">
+                    📊 <%= suggestion[:reason] %>
+                  </div>
+                </div>
+                <%= button_to apply_suggestion_shifts_path(
+                      staff_id: suggestion[:staff].id,
+                      to_store_id: suggestion[:to_store].id,
+                      date: @date
+                    ), 
+                    method: :post,
+                    class: "px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition" do %>
+                  適用
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <% if @suggestions.any? %>
+            <div class="mt-6 pt-6 border-t">
+              <%= button_to "✨ すべての提案を適用する",
+                    "#",
+                    method: :post,
+                    class: "w-full py-4 bg-gradient-to-r from-purple-600 to-purple-800 text-white rounded-xl font-bold text-lg hover:from-purple-700 hover:to-purple-900 transition",
+                    disabled: true,
+                    title: "一括適用は近日実装予定" %>
+              <div class="text-center text-xs text-gray-400 mt-2">※一括適用は近日実装予定</div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 不足店舗一覧 -->
+    <div class="mt-6 bg-white rounded-xl shadow p-6">
+      <h3 class="font-bold mb-4">🔴 不足している店舗</h3>
+      <div class="space-y-3">
+        <% @shortage_data[:stores].select { |s| s[:status] == :shortage }.each do |store| %>
+          <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+            <div>
+              <div class="font-bold"><%= store[:name] %></div>
+              <div class="text-sm text-gray-600">
+                <% if store[:pharmacist][:diff] < 0 %>
+                  <span class="text-red-600">薬剤師 <%= store[:pharmacist][:diff] %></span>
+                <% end %>
+                <% if store[:clerk][:diff] < 0 %>
+                  <span class="text-red-600 ml-2">事務 <%= store[:clerk][:diff] %></span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- 余剰店舗一覧 -->
+    <div class="mt-6 bg-white rounded-xl shadow p-6">
+      <h3 class="font-bold mb-4">🟢 余剰がある店舗</h3>
+      <div class="space-y-3">
+        <% @shortage_data[:stores].select { |s| s[:status] == :surplus }.each do |store| %>
+          <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <div>
+              <div class="font-bold"><%= store[:name] %></div>
+              <div class="text-sm text-gray-600">
+                <% if store[:pharmacist][:diff] > 0 %>
+                  <span class="text-green-600">薬剤師 +<%= store[:pharmacist][:diff] %></span>
+                <% end %>
+                <% if store[:clerk][:diff] > 0 %>
+                  <span class="text-green-600 ml-2">事務 +<%= store[:clerk][:diff] %></span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+        <% if @shortage_data[:stores].none? { |s| s[:status] == :surplus } %>
+          <div class="text-gray-500 text-center py-4">余剰のある店舗はありません</div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

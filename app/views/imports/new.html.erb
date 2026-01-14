@@ -1,0 +1,66 @@
+<%# app/views/imports/new.html.erb %>
+
+<div class="min-h-screen bg-gray-100">
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-gray-700 to-gray-900 text-white py-4 px-6 shadow-lg">
+    <h1 class="text-xl font-bold">📥 CSVインポート</h1>
+    <p class="text-sm opacity-90">勤次郎からデータを取り込む</p>
+  </header>
+
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    <!-- 戻るリンク -->
+    <div class="mb-4">
+      <%= link_to shifts_path, class: "text-blue-600 hover:underline text-sm" do %>
+        ← シフト一覧に戻る
+      <% end %>
+    </div>
+
+    <% if flash[:alert] %>
+      <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <div class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-bold mb-4">勤次郎CSVをアップロード</h2>
+      
+      <%= form_with url: imports_path, method: :post, multipart: true, class: "space-y-6" do |f| %>
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition">
+          <div class="text-4xl mb-2">📄</div>
+          <div class="text-gray-600 mb-4">CSVファイルを選択してください</div>
+          <%= f.file_field :file, accept: '.csv', class: "block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" %>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h3 class="font-bold text-sm mb-2">📋 必要なCSV形式</h3>
+          <div class="text-xs text-gray-600 space-y-1">
+            <div>• 勤務日, 店舗コード, 店舗名, 社員コード, 社員名, 職種, 勤務区分, 出勤時間, 退勤時間, 休憩時間</div>
+            <div>• 文字コード: UTF-8</div>
+            <div>• 1行目はヘッダー行</div>
+          </div>
+        </div>
+
+        <div class="bg-yellow-50 rounded-lg p-4">
+          <h3 class="font-bold text-sm mb-2 text-yellow-700">⚠️ 注意事項</h3>
+          <div class="text-xs text-yellow-600 space-y-1">
+            <div>• 同じ日付・スタッフのシフトは上書きされます</div>
+            <div>• 新しい店舗・スタッフは自動で登録されます</div>
+          </div>
+        </div>
+
+        <%= f.submit 'インポート実行', class: "w-full py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition cursor-pointer" %>
+      <% end %>
+    </div>
+
+    <!-- サンプルCSV -->
+    <div class="mt-6 bg-white rounded-xl shadow p-6">
+      <h3 class="font-bold mb-4">📝 CSVサンプル</h3>
+      <div class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+        <pre>勤務日,店舗コード,店舗名,社員コード,社員名,職種,勤務区分,出勤時間,退勤時間,休憩時間
+2025/02/01,001,博多駅前店,E001,山田太郎,薬剤師,通常,09:00,18:00,60
+2025/02/01,001,博多駅前店,E002,佐藤花子,薬剤師,通常,09:00,18:00,60
+2025/02/01,001,博多駅前店,E003,鈴木一郎,事務,通常,09:00,18:00,60</pre>
+      </div>
+    </div>
+  </div>
+</div>

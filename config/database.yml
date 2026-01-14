@@ -1,0 +1,18 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
+development:
+  <<: *default
+  database: shift_manager_development
+
+test:
+  <<: *default
+  database: shift_manager_test
+
+production:
+  <<: *default
+  database: shift_manager_production
+  username: shift_manager
+  password: <%= ENV["SHIFT_MANAGER_DATABASE_PASSWORD"] %>
