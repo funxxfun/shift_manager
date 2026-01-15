@@ -1,0 +1,20 @@
+<%# app/views/stores/edit.html.erb %>
+
+<div class="min-h-screen bg-gray-100">
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-emerald-600 to-emerald-800 text-white py-4 px-6 shadow-lg">
+    <h1 class="text-xl font-bold">🏪 店舗編集</h1>
+    <p class="text-sm opacity-90"><%= @store.name %>の情報と必要人数を編集する</p>
+  </header>
+
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    <!-- 戻るリンク -->
+    <div class="mb-4">
+      <%= link_to stores_path, class: "text-blue-600 hover:underline text-sm" do %>
+        ← 店舗一覧に戻る
+      <% end %>
+    </div>
+
+    <%= render 'form', store: @store %>
+  </div>
+</div>

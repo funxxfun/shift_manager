@@ -107,8 +107,14 @@ app/
     ├── shifts/
     │   ├── index.html.erb        # 日別ビュー
     │   └── suggestions.html.erb  # AI提案画面
-    └── imports/
-        └── new.html.erb          # CSVインポート画面
+    ├── imports/
+    │   └── new.html.erb          # CSVインポート画面
+    └── stores/
+        ├── index.html.erb        # 店舗一覧
+        ├── show.html.erb         # 店舗詳細
+        ├── new.html.erb          # 店舗登録
+        ├── edit.html.erb         # 店舗編集
+        └── _form.html.erb        # 共通フォーム
 ```
 
 ---
@@ -233,7 +239,7 @@ staffs ─────────< shifts >───────── stores
 | カテゴリ | 機能 | 状態 |
 |---------|------|------|
 | データ管理 | CSVインポート | 実装済み |
-| データ管理 | 店舗必要人数設定 | モデルのみ |
+| データ管理 | 店舗必要人数設定 | 実装済み |
 | 過不足算出 | 日別表示 | 実装済み |
 | 過不足算出 | 週間一覧 | 実装済み |
 | 補填 | 店舗間共有 | 未実装 |
