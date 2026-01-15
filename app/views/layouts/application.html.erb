@@ -19,6 +19,21 @@
       </div>
     <% end %>
 
+    <% if current_staff %>
+      <nav class="bg-gray-800 text-white px-4 py-2 flex justify-between items-center text-sm">
+        <div class="flex items-center gap-4">
+          <span class="font-bold">💊 シフト管理</span>
+          <%= link_to 'シフト', shifts_path, class: 'hover:text-gray-300' %>
+          <%= link_to '店舗', stores_path, class: 'hover:text-gray-300' %>
+          <%= link_to 'インポート', new_import_path, class: 'hover:text-gray-300' %>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-gray-300"><%= current_staff.name %>（<%= current_staff.code %>）</span>
+          <%= button_to 'ログアウト', logout_path, method: :delete, class: 'bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs' %>
+        </div>
+      </nav>
+    <% end %>
+
     <%= yield %>
   </body>
 </html>
