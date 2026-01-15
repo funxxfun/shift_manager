@@ -1,7 +1,7 @@
 # spec/support/authentication_helper.rb
 module AuthenticationHelper
   def login_as(staff)
-    post login_path, params: { code: staff.code, password: 'password123' }
+    post login_path, params: { code: staff.code }
   end
 end
 

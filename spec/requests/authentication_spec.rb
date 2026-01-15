@@ -2,7 +2,7 @@
 require 'rails_helper'
 
 RSpec.describe '認証アクセス制御', type: :request do
-  let!(:staff) { create(:staff, code: 'TEST001', password: 'password123') }
+  let!(:staff) { create(:staff, code: 'TEST001') }
 
   describe '未ログイン時' do
     it 'シフト一覧にアクセスするとログイン画面にリダイレクトされる' do
@@ -23,7 +23,7 @@ RSpec.describe '認証アクセス制御', type: :request do
 
   describe 'ログイン時' do
     before do
-      post login_path, params: { code: 'TEST001', password: 'password123' }
+      post login_path, params: { code: 'TEST001' }
     end
 
     it 'シフト一覧にアクセスできる' do

@@ -8,11 +8,11 @@ class SessionsController < ApplicationController
   def create
     staff = Staff.find_by(code: params[:code])
 
-    if staff&.authenticate(params[:password])
+    if staff
       session[:staff_id] = staff.id
       redirect_to root_path, notice: 'ログインしました'
     else
-      flash.now[:alert] = '社員コードまたはパスワードが正しくありません'
+      flash.now[:alert] = '社員コードが見つかりません'
       render :new, status: :unprocessable_entity
     end
   end

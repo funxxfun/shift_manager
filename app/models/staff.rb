@@ -1,7 +1,5 @@
 # app/models/staff.rb
 class Staff < ApplicationRecord
-  has_secure_password
-
   belongs_to :base_store, class_name: 'Store', optional: true
   has_many :shifts, dependent: :destroy
 

@@ -48,7 +48,6 @@ class CsvImportService
       staff.name = row['社員名']
       staff.role = role
       staff.base_store = store
-      staff.password = 'password123'  # デフォルトパスワード（初回ログイン後に変更を促す）
     end
   end
 
