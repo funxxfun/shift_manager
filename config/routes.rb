@@ -2,6 +2,11 @@
 Rails.application.routes.draw do
   root 'shifts#index'
 
+  # 認証
+  get    'login',  to: 'sessions#new'
+  post   'login',  to: 'sessions#create'
+  delete 'logout', to: 'sessions#destroy'
+
   resources :shifts, only: [:index] do
     collection do
       get :weekly

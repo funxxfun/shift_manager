@@ -43,11 +43,12 @@ class CsvImportService
 
   def find_or_create_staff(row, store)
     role = row['職種'] == '薬剤師' ? :pharmacist : :clerk
-    
+
     Staff.find_or_create_by!(code: row['社員コード']) do |staff|
       staff.name = row['社員名']
       staff.role = role
       staff.base_store = store
+      staff.password = 'password123'  # デフォルトパスワード（初回ログイン後に変更を促す）
     end
   end
 

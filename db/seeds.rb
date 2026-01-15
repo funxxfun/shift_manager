@@ -58,11 +58,12 @@ staffs_data = [
 
 staffs_data.each do |data|
   store = Store.find_by(code: data[:store_code])
-  Staff.find_or_create_by!(code: data[:code]) do |s|
-    s.name = data[:name]
-    s.role = data[:role]
-    s.base_store = store
-  end
+  staff = Staff.find_or_initialize_by(code: data[:code])
+  staff.name = data[:name]
+  staff.role = data[:role]
+  staff.base_store = store
+  staff.password = 'password123' if staff.new_record? || staff.password_digest.blank?
+  staff.save!
   puts "  Created: #{data[:name]}"
 end
 
