@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bundle exec rails generate:*)",
+      "Bash(bundle exec rspec:*)"
+    ]
+  }
+}

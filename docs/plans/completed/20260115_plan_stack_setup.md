@@ -62,15 +62,6 @@ docs/
 | docs/templates/plan-template.md | 計画テンプレート |
 | docs/templates/review-template.md | レビューテンプレート |
 
-### 削除（統合のため）
-
-| ファイル | 理由 |
-|---------|------|
-| docs/architecture/overview.md | README.mdに統合 |
-| docs/architecture/database.md | README.mdに統合 |
-| docs/architecture/background.md | README.mdに統合 |
-| docs/architecture/requirements.md | README.mdに統合 |
-
 ## 実装ステップ
 
 1. [x] ディレクトリ構造の作成
@@ -80,7 +71,6 @@ docs/
 5. [x] テンプレート作成
 6. [x] ガイド作成
 7. [x] ヒアリング内容の反映
-8. [x] アーキテクチャファイルの統合
 
 ## 考慮事項
 
@@ -93,4 +83,3 @@ docs/
 ## 完了
 
 - 実装日: 2026-01-15
-- 所要時間: 1セッション
