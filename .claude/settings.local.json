@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(bundle exec rails generate:*)",
-      "Bash(bundle exec rspec:*)"
+      "Bash(bundle exec rspec:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(bundle exec rails db:migrate:*)",
+      "Bash(bundle exec rails runner:*)",
+      "Bash(gh pr list:*)"
     ]
   }
 }

@@ -58,10 +58,10 @@ staffs_data = [
 
 staffs_data.each do |data|
   store = Store.find_by(code: data[:store_code])
-  Staff.find_or_create_by!(code: data[:code]) do |s|
-    s.name = data[:name]
-    s.role = data[:role]
-    s.base_store = store
+  Staff.find_or_create_by!(code: data[:code]) do |staff|
+    staff.name = data[:name]
+    staff.role = data[:role]
+    staff.base_store = store
   end
   puts "  Created: #{data[:name]}"
 end
