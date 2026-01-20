@@ -4,6 +4,12 @@ class Staff < ApplicationRecord
   has_many :shifts, dependent: :destroy
 
   enum role: { pharmacist: 0, clerk: 1 }
+  enum permission_level: {
+    staff: 0,
+    store_manager: 1,
+    area_manager: 2,
+    admin: 3
+  }, _prefix: :permission
 
   validates :code, presence: true, uniqueness: true
   validates :name, presence: true
@@ -13,6 +19,32 @@ class Staff < ApplicationRecord
     case role
     when 'pharmacist' then '薬剤師'
     when 'clerk' then '事務'
+    end
+  end
+
+  # 権限ヘルパーメソッド
+  def admin?
+    permission_admin?
+  end
+
+  def manager_or_above?
+    permission_area_manager? || permission_admin?
+  end
+
+  def store_manager_or_above?
+    permission_store_manager? || manager_or_above?
+  end
+
+  def can_manage_store?(store)
+    admin? || (store_manager_or_above? && base_store_id == store.id)
+  end
+
+  def permission_label
+    case permission_level
+    when 'staff' then 'スタッフ'
+    when 'store_manager' then '店舗管理者'
+    when 'area_manager' then 'エリアマネージャー'
+    when 'admin' then '本部管理者'
     end
   end
 

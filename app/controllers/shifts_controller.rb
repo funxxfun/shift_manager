@@ -1,5 +1,7 @@
 # app/controllers/shifts_controller.rb
 class ShiftsController < ApplicationController
+  before_action :require_manager_or_above!, only: [:apply_suggestion]
+
   def index
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @shortage_data = ShortageCalculatorService.calculate_all(@date)

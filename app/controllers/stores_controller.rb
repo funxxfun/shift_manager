@@ -1,6 +1,8 @@
 # app/controllers/stores_controller.rb
 class StoresController < ApplicationController
   before_action :set_store, only: [:show, :edit, :update, :destroy]
+  before_action :require_admin!, only: [:new, :create, :destroy]
+  before_action :authorize_store_edit!, only: [:edit, :update]
 
   def index
     @stores = Store.includes(:store_requirements).order(:code)
@@ -52,6 +54,12 @@ class StoresController < ApplicationController
 
   def set_store
     @store = Store.find(params[:id])
+  end
+
+  def authorize_store_edit!
+    unless current_staff.can_manage_store?(@store)
+      redirect_to stores_path, alert: '権限がありません'
+    end
   end
 
   def store_params

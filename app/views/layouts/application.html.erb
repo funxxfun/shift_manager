@@ -25,10 +25,13 @@
           <span class="font-bold">💊 シフト管理</span>
           <%= link_to 'シフト', shifts_path, class: 'hover:text-gray-300' %>
           <%= link_to '店舗', stores_path, class: 'hover:text-gray-300' %>
-          <%= link_to 'インポート', new_import_path, class: 'hover:text-gray-300' %>
+          <% if current_staff.admin? %>
+            <%= link_to 'インポート', new_import_path, class: 'hover:text-gray-300' %>
+            <%= link_to 'スタッフ', staffs_path, class: 'hover:text-gray-300' %>
+          <% end %>
         </div>
         <div class="flex items-center gap-4">
-          <span class="text-gray-300"><%= current_staff.name %>（<%= current_staff.code %>）</span>
+          <span class="text-gray-300"><%= current_staff.name %>（<%= current_staff.permission_label %>）</span>
           <%= button_to 'ログアウト', logout_path, method: :delete, class: 'bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs' %>
         </div>
       </nav>

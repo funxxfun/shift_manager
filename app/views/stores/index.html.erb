@@ -8,8 +8,10 @@
         <h1 class="text-xl font-bold">🏪 店舗管理</h1>
         <p class="text-sm opacity-90">店舗と必要人数を管理する</p>
       </div>
-      <%= link_to new_store_path, class: "bg-white text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition" do %>
-        + 新規登録
+      <% if current_staff.admin? %>
+        <%= link_to new_store_path, class: "bg-white text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition" do %>
+          + 新規登録
+        <% end %>
       <% end %>
     </div>
   </header>
@@ -32,8 +34,10 @@
       <div class="bg-white rounded-xl shadow p-8 text-center">
         <div class="text-4xl mb-4">🏪</div>
         <p class="text-gray-600 mb-4">まだ店舗が登録されていません</p>
-        <%= link_to new_store_path, class: "inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition" do %>
-          店舗を登録する
+        <% if current_staff.admin? %>
+          <%= link_to new_store_path, class: "inline-block bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition" do %>
+            店舗を登録する
+          <% end %>
         <% end %>
       </div>
     <% else %>
@@ -100,10 +104,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                 <% end %>
-                <%= link_to edit_store_path(store), class: "p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition", title: "編集" do %>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
+                <% if current_staff.can_manage_store?(store) %>
+                  <%= link_to edit_store_path(store), class: "p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition", title: "編集" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  <% end %>
                 <% end %>
               </div>
             </div>

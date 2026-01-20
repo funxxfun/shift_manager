@@ -1,5 +1,7 @@
 # app/controllers/imports_controller.rb
 class ImportsController < ApplicationController
+  before_action :require_admin!
+
   def new
   end
 

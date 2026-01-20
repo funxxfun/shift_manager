@@ -13,4 +13,23 @@ class ApplicationController < ActionController::Base
   end
 
   helper_method :current_staff
+
+  # 権限チェックメソッド
+  def require_admin!
+    unless current_staff&.admin?
+      redirect_to root_path, alert: '権限がありません'
+    end
+  end
+
+  def require_manager_or_above!
+    unless current_staff&.manager_or_above?
+      redirect_to root_path, alert: '権限がありません'
+    end
+  end
+
+  def require_store_manager_or_above!
+    unless current_staff&.store_manager_or_above?
+      redirect_to root_path, alert: '権限がありません'
+    end
+  end
 end

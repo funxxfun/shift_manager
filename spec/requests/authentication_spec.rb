@@ -21,7 +21,7 @@ RSpec.describe '認証アクセス制御', type: :request do
     end
   end
 
-  describe 'ログイン時' do
+  describe 'ログイン時（一般スタッフ）' do
     before do
       post login_path, params: { code: 'TEST001' }
     end
@@ -31,15 +31,28 @@ RSpec.describe '認証アクセス制御', type: :request do
       expect(response).to have_http_status(:success)
     end
 
-    it 'CSVインポート画面にアクセスできる' do
+    it 'CSVインポート画面は権限がないのでリダイレクトされる' do
       get new_import_path
-      expect(response).to have_http_status(:success)
+      expect(response).to redirect_to(root_path)
     end
 
     it 'ナビゲーションバーにユーザー名が表示される' do
       get shifts_path
       expect(response.body).to include(staff.name)
       expect(response.body).to include('ログアウト')
+    end
+  end
+
+  describe 'ログイン時（管理者）' do
+    let!(:admin_staff) { create(:staff, code: 'ADMIN001', permission_level: :admin) }
+
+    before do
+      post login_path, params: { code: 'ADMIN001' }
+    end
+
+    it 'CSVインポート画面にアクセスできる' do
+      get new_import_path
+      expect(response).to have_http_status(:success)
     end
   end
 end

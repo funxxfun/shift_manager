@@ -38,10 +38,16 @@ end
 puts "Creating staffs..."
 
 staffs_data = [
-  { code: 'E001', name: '山田太郎', role: :pharmacist, store_code: '001' },
+  # 本部管理者
+  { code: 'ADMIN', name: '管理者', role: :pharmacist, store_code: '001', permission_level: :admin },
+  # エリアマネージャー
+  { code: 'M001', name: '斉藤マネージャー', role: :pharmacist, store_code: '001', permission_level: :area_manager },
+  # 店舗管理者
+  { code: 'E001', name: '山田太郎', role: :pharmacist, store_code: '001', permission_level: :store_manager },
+  { code: 'E004', name: '田中美咲', role: :pharmacist, store_code: '002', permission_level: :store_manager },
+  # 一般スタッフ
   { code: 'E002', name: '佐藤花子', role: :pharmacist, store_code: '001' },
   { code: 'E003', name: '鈴木一郎', role: :clerk, store_code: '001' },
-  { code: 'E004', name: '田中美咲', role: :pharmacist, store_code: '002' },
   { code: 'E005', name: '高橋健太', role: :pharmacist, store_code: '002' },
   { code: 'E006', name: '伊藤さくら', role: :clerk, store_code: '002' },
   { code: 'E007', name: '渡辺大輔', role: :clerk, store_code: '002' },
@@ -62,8 +68,9 @@ staffs_data.each do |data|
     staff.name = data[:name]
     staff.role = data[:role]
     staff.base_store = store
+    staff.permission_level = data[:permission_level] || :staff
   end
-  puts "  Created: #{data[:name]}"
+  puts "  Created: #{data[:name]} (#{data[:permission_level] || 'staff'})"
 end
 
 # シフト作成用ヘルパー
