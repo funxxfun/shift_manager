@@ -29,9 +29,12 @@ class StoresController < ApplicationController
   end
 
   def edit
+    # 関連を明示的にロード
+    @store.store_requirements.load
+
     # 不足している曜日タイプがあれば追加
     %i[weekday saturday holiday].each do |day_type|
-      unless @store.store_requirements.exists?(day_type: day_type)
+      unless @store.store_requirements.any? { |r| r.day_type == day_type.to_s }
         @store.store_requirements.build(day_type: day_type)
       end
     end

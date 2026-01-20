@@ -46,35 +46,38 @@
     <p class="text-sm text-gray-600 mb-4">曜日タイプ別に、薬剤師・事務それぞれの必要人数を設定してください。</p>
 
     <div class="space-y-4">
-      <%= f.fields_for :store_requirements, store.store_requirements.sort_by { |r| StoreRequirement.day_types[r.day_type] || 0 } do |req| %>
-        <div class="border rounded-lg p-4 bg-gray-50">
-          <%= req.hidden_field :id %>
-          <%= req.hidden_field :day_type %>
+      <% sorted_requirements = store.store_requirements.sort_by { |r| StoreRequirement.day_types[r.day_type] || 0 } %>
+      <% sorted_requirements.each do |requirement| %>
+        <%= f.fields_for :store_requirements, requirement do |req| %>
+          <div class="border rounded-lg p-4 bg-gray-50">
+            <%= req.hidden_field :id %>
+            <%= req.hidden_field :day_type %>
 
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-bold text-gray-700">
-              <% case req.object.day_type %>
-              <% when "weekday" %>
-                📅 平日
-              <% when "saturday" %>
-                📆 土曜
-              <% when "holiday" %>
-                🎌 日祝
-              <% end %>
-            </h3>
-          </div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-bold text-gray-700">
+                <% case req.object.day_type %>
+                <% when "weekday" %>
+                  📅 平日
+                <% when "saturday" %>
+                  📆 土曜
+                <% when "holiday" %>
+                  🎌 日祝
+                <% end %>
+              </h3>
+            </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">💊 薬剤師</label>
-              <%= req.number_field :pharmacist_count, min: 0, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder: "0" %>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-600 mb-1">📋 事務</label>
-              <%= req.number_field :clerk_count, min: 0, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder: "0" %>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">💊 薬剤師</label>
+                <%= req.number_field :pharmacist_count, min: 0, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder: "0" %>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-600 mb-1">📋 事務</label>
+                <%= req.number_field :clerk_count, min: 0, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder: "0" %>
+              </div>
             </div>
           </div>
-        </div>
+        <% end %>
       <% end %>
     </div>
   </div>
