@@ -248,15 +248,60 @@ staffs ─────────< shifts >───────── stores
 | 権限 | ユーザー認証 | 実装済み |
 | 権限 | 権限管理 | 未実装 |
 
+### ルーティング一覧
+
+#### 認証
+
+| URL | メソッド | 機能 |
+|-----|---------|------|
+| `/login` | GET | ログイン画面 |
+| `/login` | POST | ログイン処理 |
+| `/logout` | DELETE | ログアウト |
+
+#### シフト管理
+
+| URL | メソッド | 機能 |
+|-----|---------|------|
+| `/` | GET | 日別シフト一覧（過不足表示） |
+| `/shifts/weekly` | GET | 週間シフト一覧 |
+| `/shifts/suggestions` | GET | AI補填提案 |
+| `/shifts/apply_suggestion` | POST | 提案適用 |
+
+#### マスタ管理
+
+| URL | メソッド | 機能 |
+|-----|---------|------|
+| `/stores` | GET | 店舗一覧 |
+| `/stores/new` | GET | 店舗作成画面 |
+| `/stores/:id` | GET | 店舗詳細 |
+| `/stores/:id/edit` | GET | 店舗編集画面 |
+| `/staffs` | GET | スタッフ一覧 |
+| `/staffs/new` | GET | スタッフ作成画面 |
+| `/staffs/:id` | GET | スタッフ詳細 |
+| `/staffs/:id/edit` | GET | スタッフ編集画面 |
+
+#### データ取り込み
+
+| URL | メソッド | 機能 |
+|-----|---------|------|
+| `/imports/new` | GET | CSVインポート画面 |
+| `/imports` | POST | CSVインポート処理 |
+
+#### API
+
+| URL | メソッド | 機能 |
+|-----|---------|------|
+| `/api/v1/shifts` | GET | シフトデータ取得 |
+| `/api/v1/suggestions` | GET | AI提案取得 |
+
 ---
 
 ## 8. 今後の開発優先度
 
 ### Phase 1（必須）
 
-1. ユーザー認証
-2. 権限管理
-3. 店舗必要人数設定UI
+1. 権限管理
+2. 店舗必要人数設定UI
 
 ### Phase 2（重要）
 
