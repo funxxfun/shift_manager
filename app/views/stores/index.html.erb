@@ -1,0 +1,95 @@
+<%# app/views/stores/index.html.erb %>
+
+<div class="min-h-screen bg-gray-100">
+  <header class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-4 px-6 shadow-lg">
+    <h1 class="text-xl font-bold">店舗管理</h1>
+    <p class="text-sm opacity-90">店舗情報・必要人数設定</p>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <% if flash[:notice] %>
+      <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
+
+    <!-- ナビゲーション -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <%= link_to root_path, class: "px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" do %>
+        シフト一覧
+      <% end %>
+      <%= link_to stores_path, class: "px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" do %>
+        店舗管理
+      <% end %>
+      <%= link_to staffs_path, class: "px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" do %>
+        スタッフ管理
+      <% end %>
+      <%= link_to new_store_path, class: "px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium" do %>
+        + 新規店舗
+      <% end %>
+    </div>
+
+    <!-- 店舗一覧 -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">コード</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">店舗名</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">平日</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">土曜</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">日祝</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">所属スタッフ</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @stores.each do |store| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <%= store.code %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <%= link_to store.name, store, class: "text-blue-600 hover:underline" %>
+              </td>
+              <% weekday = store.store_requirements.find_by(day_type: :weekday) %>
+              <% saturday = store.store_requirements.find_by(day_type: :saturday) %>
+              <% holiday = store.store_requirements.find_by(day_type: :holiday) %>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <% if weekday %>
+                  <span class="text-blue-600">薬<%= weekday.pharmacist_count %></span>
+                  <span class="text-gray-600">事<%= weekday.clerk_count %></span>
+                <% else %>
+                  <span class="text-gray-400">未設定</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <% if saturday %>
+                  <span class="text-blue-600">薬<%= saturday.pharmacist_count %></span>
+                  <span class="text-gray-600">事<%= saturday.clerk_count %></span>
+                <% else %>
+                  <span class="text-gray-400">未設定</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <% if holiday %>
+                  <span class="text-blue-600">薬<%= holiday.pharmacist_count %></span>
+                  <span class="text-gray-600">事<%= holiday.clerk_count %></span>
+                <% else %>
+                  <span class="text-gray-400">未設定</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                <%= store.staffs.count %>名
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                <%= link_to '編集', edit_store_path(store), class: "text-blue-600 hover:underline mr-3" %>
+                <%= link_to '削除', store, method: :delete, data: { turbo_method: :delete, turbo_confirm: "#{store.name}を削除しますか？" }, class: "text-red-600 hover:underline" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

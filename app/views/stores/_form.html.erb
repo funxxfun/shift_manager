@@ -1,0 +1,74 @@
+<%# app/views/stores/_form.html.erb %>
+
+<%= form_with model: store, class: "space-y-6" do |f| %>
+  <% if store.errors.any? %>
+    <div class="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+      <ul class="list-disc list-inside text-sm">
+        <% store.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- 基本情報 -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h3 class="text-lg font-bold mb-4">基本情報</h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">店舗コード</label>
+        <%= f.text_field :code, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder: "001" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">店舗名</label>
+        <%= f.text_field :name, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder: "博多駅前店" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">住所</label>
+        <%= f.text_field :address, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">最寄り駅</label>
+        <%= f.text_field :nearest_station, class: "block w-full px-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- 必要人数設定 -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <h3 class="text-lg font-bold mb-4">必要人数設定</h3>
+
+    <%= f.fields_for :store_requirements do |req| %>
+      <%
+        day_label = case req.object.day_type
+                    when 'weekday' then '平日'
+                    when 'saturday' then '土曜'
+                    when 'holiday' then '日祝'
+                    else req.object.day_type
+                    end
+      %>
+      <div class="flex items-center gap-4 py-3 border-b last:border-b-0">
+        <div class="w-20 font-medium text-gray-700"><%= day_label %></div>
+        <%= req.hidden_field :id %>
+        <%= req.hidden_field :day_type %>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">薬剤師</label>
+          <%= req.number_field :pharmacist_count, min: 0, class: "w-16 px-3 py-2 border rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500" %>
+          <span class="text-sm text-gray-500">名</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">事務</label>
+          <%= req.number_field :clerk_count, min: 0, class: "w-16 px-3 py-2 border rounded-lg text-sm text-center focus:ring-2 focus:ring-blue-500" %>
+          <span class="text-sm text-gray-500">名</span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- ボタン -->
+  <div class="flex gap-4">
+    <%= f.submit store.persisted? ? '更新' : '登録', class: "px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 cursor-pointer" %>
+    <%= link_to 'キャンセル', stores_path, class: "px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300" %>
+  </div>
+<% end %>
