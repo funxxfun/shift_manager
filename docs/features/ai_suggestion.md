@@ -112,6 +112,78 @@ surplus_stores = shortage_data[:stores].select { |s| s[:status] == :surplus }
 ANTHROPIC_API_KEY=sk-ant-xxxxx
 ```
 
+## ルールベース vs AI API 比較
+
+### 機能比較
+
+| 項目 | ルールベース | AI API |
+|------|-------------|--------|
+| **マッチング** | 先着順（最初に見つかった候補を割り当て） | 最適な組み合わせを判断 |
+| **理由説明** | 定型文（「○○店は薬剤師が△名余剰のため」） | 状況に応じた自然な説明 |
+| **考慮要素** | 職種の一致のみ | 複数要素を総合判断可能 |
+| **API費用** | 無料 | 従量課金 |
+| **レスポンス速度** | 高速 | やや遅い（API呼び出し） |
+
+### AI APIで可能になること
+
+#### 1. インテリジェントなマッチング
+
+```
+例: 3店舗で薬剤師不足、2店舗で余剰がある場合
+
+ルールベース → 先に見つかった順に割り当て
+AI → 「A店はB店に近いのでAさんを、C店は混雑時間帯が違うのでDさんを」
+```
+
+#### 2. コンテキストを考慮した提案理由
+
+```
+ルールベース: 「駅前店は薬剤師が1名余剰のため」
+AI: 「駅前店は午後の患者数が少なく余裕があるため、
+      混雑が予想される中央店への応援が効果的です」
+```
+
+#### 3. 制約条件の柔軟な解釈
+
+プロンプトで指示した制約をAIが理解して判断：
+- 同職種のみ（薬剤師→薬剤師、事務→事務）
+- 1人のスタッフは1日1店舗のみ
+- 余剰店舗からのみ補填可能
+
+### 使い分けの目安
+
+| シーン | 推奨 |
+|--------|------|
+| 店舗数が少ない（5店舗以下） | ルールベースで十分 |
+| 店舗数が多く組み合わせが複雑 | AI API推奨 |
+| 提案理由を人間が読んで納得したい | AI API推奨 |
+| コストを抑えたい | ルールベース |
+| 将来的に距離・勤務時間などの条件を追加したい | AI API推奨 |
+
+### 切り替え方法
+
+コード変更なしで、環境変数の設定のみで切り替わる：
+
+```bash
+# AI APIを使用する場合
+export ANTHROPIC_API_KEY=sk-ant-xxxxx
+
+# ルールベースを使用する場合（APIキーを設定しない）
+unset ANTHROPIC_API_KEY
+```
+
+### コード上の分岐点
+
+`app/services/ai_suggestion_service.rb` の `suggest` メソッド（18-22行目）:
+
+```ruby
+if @api_key.present?
+  ai_suggestions(date, shortage_data, candidates)
+else
+  rule_based_suggestions(date, shortage_data, candidates)
+end
+```
+
 ## 関連ファイル
 
 - [app/controllers/shifts_controller.rb](../../app/controllers/shifts_controller.rb)

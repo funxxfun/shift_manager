@@ -25,8 +25,8 @@
 | CSVインポート | 実装済み |
 | 過不足算出・表示 | 実装済み |
 | AI補填提案 | 実装済み |
-| 店舗間共有 | 未実装 |
-| ユーザー認証・権限 | 未実装 |
+| ユーザー認証・権限 | 実装済み |
+| 店舗間共有 | 未実装（クラウドデプロイで実現） |
 
 詳細: [docs/architecture/README.md](docs/architecture/README.md)
 
@@ -99,6 +99,7 @@ docs/
 
 - [docs/guides/development-workflow.md](docs/guides/development-workflow.md) - 開発フロー詳細
 - [docs/guides/setup.md](docs/guides/setup.md) - 環境セットアップ
+- [docs/guides/database-deployment.md](docs/guides/database-deployment.md) - データベースとデプロイメント
 
 ### テンプレート
 
