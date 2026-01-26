@@ -4,6 +4,8 @@ class Store < ApplicationRecord
   has_many :shifts, dependent: :destroy
   has_many :staffs, foreign_key: :base_store_id
 
+  accepts_nested_attributes_for :store_requirements, allow_destroy: true
+
   validates :code, presence: true, uniqueness: true
   validates :name, presence: true
 
