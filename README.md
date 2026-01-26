@@ -32,6 +32,22 @@ rails db:create db:migrate db:seed
 rails server
 ```
 
+## 開発用コマンド
+
+```bash
+# サーバー起動
+bundle exec rails s
+
+# ポート指定で起動
+bundle exec rails s -p 7777
+
+# Seedデータを投入（既存データをリセット）
+bundle exec rails db:seed:replant
+
+# PostgreSQLを停止
+brew services stop postgresql
+```
+
 ## 環境変数
 
 ```
