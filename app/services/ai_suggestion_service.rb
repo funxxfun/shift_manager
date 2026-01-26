@@ -54,8 +54,9 @@ class AiSuggestionService
         end
       end
     end
-    
-    candidates
+
+    # 余剰数が多い店舗を優先
+    candidates.sort_by { |c| -c[:surplus] }
   end
 
   # ルールベースの提案（API未設定時）
