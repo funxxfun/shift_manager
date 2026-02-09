@@ -47,4 +47,35 @@ module ShiftsHelper
       'bg-gray-300'
     end
   end
+
+  # AM用のツールチップ生成
+  def am_tooltip(store_data)
+    return 'データなし' unless store_data
+    period_tooltip(store_data[:am])
+  end
+
+  # PM用のツールチップ生成
+  def pm_tooltip(store_data)
+    return 'データなし' unless store_data
+    period_tooltip(store_data[:pm])
+  end
+
+  # 時間帯ラベル
+  def shift_period_label(period)
+    case period.to_sym
+    when :am then 'AM'
+    when :pm then 'PM'
+    when :full_day then '終日'
+    else period.to_s
+    end
+  end
+
+  private
+
+  def period_tooltip(period_data)
+    return 'データなし' unless period_data
+    ph_diff = period_data[:pharmacist][:diff]
+    cl_diff = period_data[:clerk][:diff]
+    "薬剤師: #{ph_diff >= 0 ? '+' : ''}#{ph_diff}, 事務: #{cl_diff >= 0 ? '+' : ''}#{cl_diff}"
+  end
 end

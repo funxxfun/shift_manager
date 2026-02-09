@@ -33,12 +33,14 @@ class ShiftsController < ApplicationController
     staff = Staff.find(params[:staff_id])
     to_store = Store.find(params[:to_store_id])
     date = Date.parse(params[:date])
+    shift_period = params[:shift_period]&.to_sym
 
-    shift = staff.shift_on(date)
+    shift = staff.shift_on(date, shift_period)
 
     if shift
       shift.update!(store: to_store, status: :support)
-      redirect_to shifts_path(date: date), notice: "#{staff.name}を#{to_store.name}に移動しました"
+      period_label = shift.shift_period_label
+      redirect_to shifts_path(date: date), notice: "#{staff.name}を#{to_store.name}に移動しました（#{period_label}）"
     else
       redirect_to suggestions_shifts_path(date: date), alert: "シフトが見つかりません"
     end
@@ -52,7 +54,8 @@ class ShiftsController < ApplicationController
     # 店舗管理者は自店舗のスタッフのみ補填可能
     staff = Staff.find(params[:staff_id])
     date = Date.parse(params[:date])
-    shift = staff.shift_on(date)
+    shift_period = params[:shift_period]&.to_sym
+    shift = staff.shift_on(date, shift_period)
 
     unless shift && shift.store_id == current_staff.base_store_id
       redirect_to suggestions_shifts_path(date: date), alert: '自店舗のスタッフのみ補填できます'

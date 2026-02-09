@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_01_20_130857) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_09_051700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -24,7 +24,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_20_130857) do
     t.integer "status", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["date", "staff_id"], name: "index_shifts_on_date_and_staff_id", unique: true
+    t.integer "shift_period", default: 2, null: false
+    t.index ["date", "staff_id", "shift_period"], name: "index_shifts_on_date_and_staff_id_and_shift_period", unique: true
     t.index ["date", "store_id"], name: "index_shifts_on_date_and_store_id"
     t.index ["staff_id"], name: "index_shifts_on_staff_id"
     t.index ["store_id"], name: "index_shifts_on_store_id"
@@ -51,7 +52,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_01_20_130857) do
     t.integer "clerk_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["store_id", "day_type"], name: "index_store_requirements_on_store_id_and_day_type", unique: true
+    t.integer "shift_period", default: 2, null: false
+    t.index ["store_id", "day_type", "shift_period"], name: "idx_on_store_id_day_type_shift_period_0c4830b254", unique: true
     t.index ["store_id"], name: "index_store_requirements_on_store_id"
   end
 

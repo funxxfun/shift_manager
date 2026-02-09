@@ -25,13 +25,13 @@ class CsvImportService
   def import_row(row)
     # 店舗を取得または作成
     store = find_or_create_store(row)
-    
+
     # スタッフを取得または作成
     staff = find_or_create_staff(row, store)
-    
+
     # シフトを作成
     create_shift(row, store, staff)
-    
+
     @imported_count += 1
   end
 
@@ -53,12 +53,38 @@ class CsvImportService
 
   def create_shift(row, store, staff)
     date = Date.parse(row['勤務日'])
-    
-    Shift.find_or_create_by!(date: date, staff: staff) do |shift|
+    start_time = parse_time(row['出勤時間'])
+    end_time = parse_time(row['退勤時間'])
+
+    # 時間帯を判定
+    shift_period = determine_shift_period(row, start_time, end_time)
+
+    Shift.find_or_create_by!(date: date, staff: staff, shift_period: shift_period) do |shift|
       shift.store = store
-      shift.start_time = row['出勤時間']
-      shift.end_time = row['退勤時間']
+      shift.start_time = start_time
+      shift.end_time = end_time
       shift.break_minutes = row['休憩時間'].to_i
     end
+  end
+
+  def determine_shift_period(row, start_time, end_time)
+    # CSVに時間帯カラムがあればそれを使用
+    if row['時間帯'].present?
+      case row['時間帯']
+      when 'AM', 'am', '午前' then :am
+      when 'PM', 'pm', '午後' then :pm
+      else :full_day
+      end
+    else
+      # 出退勤時間から自動判定
+      Shift.determine_period(start_time, end_time)
+    end
+  end
+
+  def parse_time(time_str)
+    return nil if time_str.blank?
+    Time.zone.parse(time_str)
+  rescue
+    nil
   end
 end

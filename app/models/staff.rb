@@ -48,23 +48,32 @@ class Staff < ApplicationRecord
     end
   end
 
-  # 指定日にシフトがあるか
-  def working_on?(date)
-    shifts.exists?(date: date)
+  # 指定日・時間帯にシフトがあるか
+  def working_on?(date, shift_period = nil)
+    if shift_period
+      shifts.where(date: date).for_period(shift_period).exists?
+    else
+      shifts.exists?(date: date)
+    end
   end
 
-  # 指定日のシフト
-  def shift_on(date)
-    shifts.find_by(date: date)
+  # 指定日・時間帯のシフト
+  def shift_on(date, shift_period = nil)
+    if shift_period
+      shifts.where(date: date).for_period(shift_period).first
+    else
+      shifts.find_by(date: date)
+    end
   end
 
-  # 指定日に応援可能か（その日シフトがある かつ 所属店舗で余剰）
-  def available_for_support_on?(date)
-    shift = shift_on(date)
+  # 指定日・時間帯に応援可能か（その日シフトがある かつ 所属店舗で余剰）
+  def available_for_support_on?(date, shift_period = nil)
+    shift = shift_on(date, shift_period)
     return false unless shift
 
-    store_shortage = shift.store.shortage_on(date)
-    
+    period = shift_period || shift.shift_period.to_sym
+    store_shortage = shift.store.shortage_on(date, period)
+
     if pharmacist?
       store_shortage[:pharmacist] > 0  # 余剰があれば応援可能
     else
