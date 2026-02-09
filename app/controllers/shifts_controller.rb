@@ -14,6 +14,15 @@ class ShiftsController < ApplicationController
     @weekly_data = ShortageCalculatorService.calculate_range(@start_date, @end_date)
   end
 
+  def monthly
+    @period = parse_period(params[:period])
+    @monthly_data = ShortageCalculatorService.calculate_range(
+      @period[:start_date],
+      @period[:end_date]
+    )
+    @stores = Store.order(:code).all
+  end
+
   def suggestions
     @date = params[:date] ? Date.parse(params[:date]) : Date.today
     @shortage_data = ShortageCalculatorService.calculate_all(@date)
@@ -47,6 +56,15 @@ class ShiftsController < ApplicationController
 
     unless shift && shift.store_id == current_staff.base_store_id
       redirect_to suggestions_shifts_path(date: date), alert: '自店舗のスタッフのみ補填できます'
+    end
+  end
+
+  def parse_period(period_param)
+    if period_param.present?
+      year, month = period_param.split('-').map(&:to_i)
+      helpers.period_for(year, month)
+    else
+      helpers.current_period
     end
   end
 end

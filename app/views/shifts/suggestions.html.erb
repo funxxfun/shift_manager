@@ -8,10 +8,19 @@
   </header>
 
   <div class="max-w-4xl mx-auto px-4 py-6">
-    <!-- 戻るリンク -->
-    <div class="mb-4">
-      <%= link_to shifts_path(date: @date), class: "text-purple-600 hover:underline text-sm" do %>
-        ← 日別ビューに戻る
+    <!-- ナビゲーション -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <%= link_to shifts_path(date: @date), class: "px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" do %>
+        日別ビュー
+      <% end %>
+      <%= link_to weekly_shifts_path(start_date: @date.beginning_of_week), class: "px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" do %>
+        週間一覧
+      <% end %>
+      <%= link_to monthly_shifts_path, class: "px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" do %>
+        月間一覧
+      <% end %>
+      <%= link_to suggestions_shifts_path(date: @date), class: "px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium" do %>
+        🤖 AI提案
       <% end %>
     </div>
 
