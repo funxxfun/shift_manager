@@ -5,12 +5,6 @@ class ShiftsController < ApplicationController
     @shortage_data = ShortageCalculatorService.calculate_all(@date)
   end
 
-  def weekly
-    @start_date = params[:start_date] ? Date.parse(params[:start_date]) : Date.today.beginning_of_week
-    @end_date = @start_date + 6.days
-    @weekly_data = ShortageCalculatorService.calculate_range(@start_date, @end_date)
-  end
-
   def monthly
     @period = parse_period(params[:period])
     @monthly_data = ShortageCalculatorService.calculate_range(

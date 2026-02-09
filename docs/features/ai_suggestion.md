@@ -4,43 +4,70 @@
 
 人員不足の店舗に対し、余剰店舗からの補填を提案する。
 Claude APIが設定されていればAI提案、なければルールベースで提案。
+AM/PM別に提案を行い、応援要請→承認のフローで適用する。
 
 ## 画面
 
 ### AI提案画面 (`/shifts/suggestions`)
 
-- 当日の過不足サマリー
-- 補填提案リスト
+- 当日の過不足サマリー（AM/PM統合）
+- AM提案リスト / PM提案リスト
   - 移動元スタッフ名
   - 移動元店舗
   - 移動先店舗
   - 提案理由
-  - 適用ボタン
+  - 応援要請ボタン（エリアマネージャー以上のみ表示）
+
+### 応援要請承認画面 (`/support_requests`)
+
+- 承認待ちの応援要請一覧
+- 各要請に対して承認ボタン
+- 承認すると対象シフトが要請元店舗に移動
 
 ## ルーティング
 
 ```ruby
-get :suggestions
-post :apply_suggestion
+resources :shifts, only: [:index] do
+  collection do
+    get :suggestions
+  end
+end
+
+resources :support_requests, only: [:index, :create] do
+  member do
+    post :approve
+  end
+end
 ```
 
 ## コントローラー
 
 ```ruby
+# ShiftsController
 def suggestions
   @date = params[:date] ? Date.parse(params[:date]) : Date.today
   @shortage_data = ShortageCalculatorService.calculate_all(@date)
   @suggestions = AiSuggestionService.new.suggest(@date)
 end
 
-def apply_suggestion
-  staff = Staff.find(params[:staff_id])
+# SupportRequestsController
+def create
+  shift = Shift.find(params[:shift_id])
   to_store = Store.find(params[:to_store_id])
-  date = Date.parse(params[:date])
 
-  shift = staff.shift_on(date)
-  shift.update!(store: to_store, status: :support)
-  redirect_to shifts_path(date: date)
+  SupportRequest.create!(
+    shift: shift,
+    requesting_store: to_store,
+    requested_by: current_staff,
+    reason: params[:reason]
+  )
+  redirect_to suggestions_shifts_path(date: shift.date)
+end
+
+def approve
+  @support_request = SupportRequest.find(params[:id])
+  @support_request.approve!(current_staff)
+  redirect_to support_requests_path
 end
 ```
 
@@ -60,15 +87,17 @@ end
 
 **補填候補の抽出ロジック:**
 ```ruby
-# 余剰店舗を特定
-surplus_stores = shortage_data[:stores].select { |s| s[:status] == :surplus }
+# AM/PMそれぞれで余剰店舗を特定
+[:am, :pm].each do |period|
+  surplus_stores = shortage_data[:stores].select { |s| s[period][:status] == :surplus }
 
-# 各余剰店舗のシフトをチェック
-# 薬剤師余剰なら薬剤師を候補に
-# 事務余剰なら事務を候補に
+  # 各余剰店舗のシフトをチェック
+  # 薬剤師余剰なら薬剤師を候補に
+  # 事務余剰なら事務を候補に
 
-# 余剰数が多い店舗を優先（降順ソート）
-candidates.sort_by { |c| -c[:surplus] }
+  # 余剰数が多い店舗を優先（降順ソート）
+  candidates.sort_by { |c| -c[:surplus] }
+end
 ```
 
 **ルールベース提案:**
@@ -95,13 +124,38 @@ candidates.sort_by { |c| -c[:surplus] }
 ```ruby
 {
   staff: Staff,
+  shift: Shift,
   from_store: Store,
   to_store: Store,
   role: :pharmacist | :clerk,
+  shift_period: :am | :pm,
   reason: String,
   date: Date
 }
 ```
+
+**応援要請（SupportRequest）:**
+```ruby
+{
+  shift: Shift,              # 対象シフト
+  requesting_store: Store,    # 要請元（不足店舗）
+  requested_by: Staff,        # 要請者
+  responded_by: Staff,        # 承認者（承認後）
+  status: :pending | :approved | :rejected,
+  reason: String,             # 要請理由
+  response_note: String,      # 承認時コメント
+  responded_at: DateTime      # 承認日時
+}
+```
+
+## 権限
+
+| 操作 | staff | store_manager | area_manager | admin |
+|------|-------|---------------|--------------|-------|
+| AI提案閲覧 | O | O | O | O |
+| 応援要請送信 | - | - | O | O |
+| 承認待ち一覧閲覧 | - | O（自店舗宛） | O | O |
+| 応援要請承認 | - | O（自店舗スタッフ） | O | O |
 
 ## エラーハンドリング
 
@@ -190,5 +244,8 @@ end
 ## 関連ファイル
 
 - [app/controllers/shifts_controller.rb](../../app/controllers/shifts_controller.rb)
+- [app/controllers/support_requests_controller.rb](../../app/controllers/support_requests_controller.rb)
+- [app/models/support_request.rb](../../app/models/support_request.rb)
 - [app/services/ai_suggestion_service.rb](../../app/services/ai_suggestion_service.rb)
 - [app/views/shifts/suggestions.html.erb](../../app/views/shifts/suggestions.html.erb)
+- [app/views/support_requests/index.html.erb](../../app/views/support_requests/index.html.erb)

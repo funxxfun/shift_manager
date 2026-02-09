@@ -9,7 +9,6 @@ Rails.application.routes.draw do
 
   resources :shifts, only: [:index] do
     collection do
-      get :weekly
       get :monthly
       get :suggestions
     end

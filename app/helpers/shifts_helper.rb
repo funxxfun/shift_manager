@@ -74,7 +74,7 @@ module ShiftsHelper
 
   # AI提案カードのレンダリング
   def render_suggestion(suggestion, date)
-    can_request = current_staff.store_manager_or_above?
+    can_request = current_staff.manager_or_above?
     already_requested = suggestion[:shift_id] && SupportRequest.pending.exists?(
       shift_id: suggestion[:shift_id],
       requesting_store_id: suggestion[:to_store].id

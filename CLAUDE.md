@@ -132,12 +132,13 @@ docs/
 ## ルーティング概要
 
 ```
-/              → shifts#index（日別シフト）
-/shifts/weekly → 週間一覧
-/shifts/suggestions → AI提案
-/imports/new   → CSVインポート
-/stores        → 店舗管理
-/staffs        → スタッフ管理
+/                    → shifts#index（日別シフト）
+/shifts/monthly      → 月間一覧
+/shifts/suggestions  → AI提案
+/support_requests    → 応援要請管理（承認待ち一覧）
+/imports/new         → CSVインポート
+/stores              → 店舗管理
+/staffs              → スタッフ管理
 ```
 
 ## 環境変数

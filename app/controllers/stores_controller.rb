@@ -57,10 +57,11 @@ class StoresController < ApplicationController
   end
 
   def store_params
-    params.require(:store).permit(
-      :code, :name, :address, :nearest_station,
-      store_requirements_attributes: [:id, :day_of_week, :shift_period, :pharmacist_count, :clerk_count, :_destroy]
-    )
+    permitted = [:code, :name, :address, :nearest_station]
+    if current_staff.manager_or_above?
+      permitted << { store_requirements_attributes: [:id, :day_of_week, :shift_period, :pharmacist_count, :clerk_count, :_destroy] }
+    end
+    params.require(:store).permit(*permitted)
   end
 
   def build_requirements(store)

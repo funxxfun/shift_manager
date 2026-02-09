@@ -40,75 +40,77 @@
     </div>
   </div>
 
-  <!-- 必要人数設定 -->
-  <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="text-lg font-bold mb-4">必要人数設定（曜日別 × AM/PM）</h2>
-    <p class="text-sm text-gray-600 mb-4">各曜日・時間帯ごとに必要な薬剤師・事務の人数を設定してください。</p>
+  <!-- 必要人数設定（エリアマネージャー以上のみ編集可） -->
+  <% if current_staff.manager_or_above? %>
+    <div class="bg-white rounded-xl shadow p-6">
+      <h2 class="text-lg font-bold mb-4">必要人数設定（曜日別 × AM/PM）</h2>
+      <p class="text-sm text-gray-600 mb-4">各曜日・時間帯ごとに必要な薬剤師・事務の人数を設定してください。</p>
 
-    <div class="overflow-x-auto">
-      <table class="min-w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-3 py-2 text-left text-xs font-bold text-gray-600 uppercase">曜日</th>
-            <th class="px-3 py-2 text-center text-xs font-bold text-gray-600 uppercase">時間帯</th>
-            <th class="px-3 py-2 text-center text-xs font-bold text-gray-600 uppercase">薬剤師</th>
-            <th class="px-3 py-2 text-center text-xs font-bold text-gray-600 uppercase">事務</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <%
-            # 月曜始まりで並べ替え（1,2,3,4,5,6,0）
-            day_order = [1, 2, 3, 4, 5, 6, 0]
-            sorted_requirements = store.store_requirements.sort_by do |r|
-              [day_order.index(r.day_of_week) || 0, r.shift_period == 'am' ? 0 : 1]
-            end
-          %>
-          <% day_order.each do |day| %>
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-3 py-2 text-left text-xs font-bold text-gray-600 uppercase">曜日</th>
+              <th class="px-3 py-2 text-center text-xs font-bold text-gray-600 uppercase">時間帯</th>
+              <th class="px-3 py-2 text-center text-xs font-bold text-gray-600 uppercase">薬剤師</th>
+              <th class="px-3 py-2 text-center text-xs font-bold text-gray-600 uppercase">事務</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
             <%
-              day_name = StoreRequirement::DAY_NAMES[day]
-              day_class = case day
-                          when 0 then 'text-red-500 font-bold'
-                          when 6 then 'text-blue-500 font-bold'
-                          else 'text-gray-700'
-                          end
+              # 月曜始まりで並べ替え（1,2,3,4,5,6,0）
+              day_order = [1, 2, 3, 4, 5, 6, 0]
+              sorted_requirements = store.store_requirements.sort_by do |r|
+                [day_order.index(r.day_of_week) || 0, r.shift_period == 'am' ? 0 : 1]
+              end
             %>
-            <% [:am, :pm].each_with_index do |period, idx| %>
+            <% day_order.each do |day| %>
               <%
-                requirement = sorted_requirements.find { |r| r.day_of_week == day && r.shift_period == period.to_s }
-                next unless requirement
-                period_label = period == :am ? 'AM' : 'PM'
-                period_bg = period == :am ? 'bg-blue-50' : 'bg-orange-50'
+                day_name = StoreRequirement::DAY_NAMES[day]
+                day_class = case day
+                            when 0 then 'text-red-500 font-bold'
+                            when 6 then 'text-blue-500 font-bold'
+                            else 'text-gray-700'
+                            end
               %>
-              <%= f.fields_for :store_requirements, requirement do |req| %>
-                <tr class="<%= period_bg %>">
-                  <% if idx == 0 %>
-                    <td class="px-3 py-2 <%= day_class %>" rowspan="2">
-                      <%= day_name %>曜日
+              <% [:am, :pm].each_with_index do |period, idx| %>
+                <%
+                  requirement = sorted_requirements.find { |r| r.day_of_week == day && r.shift_period == period.to_s }
+                  next unless requirement
+                  period_label = period == :am ? 'AM' : 'PM'
+                  period_bg = period == :am ? 'bg-blue-50' : 'bg-orange-50'
+                %>
+                <%= f.fields_for :store_requirements, requirement do |req| %>
+                  <tr class="<%= period_bg %>">
+                    <% if idx == 0 %>
+                      <td class="px-3 py-2 <%= day_class %>" rowspan="2">
+                        <%= day_name %>曜日
+                      </td>
+                    <% end %>
+                    <td class="px-3 py-2 text-center text-sm font-medium">
+                      <%= period_label %>
+                      <%= req.hidden_field :day_of_week %>
+                      <%= req.hidden_field :shift_period %>
                     </td>
-                  <% end %>
-                  <td class="px-3 py-2 text-center text-sm font-medium">
-                    <%= period_label %>
-                    <%= req.hidden_field :day_of_week %>
-                    <%= req.hidden_field :shift_period %>
-                  </td>
-                  <td class="px-3 py-2 text-center">
-                    <%= req.number_field :pharmacist_count, min: 0, class: "w-16 px-2 py-1 border rounded text-center text-sm focus:ring-2 focus:ring-blue-500", placeholder: "0" %>
-                  </td>
-                  <td class="px-3 py-2 text-center">
-                    <%= req.number_field :clerk_count, min: 0, class: "w-16 px-2 py-1 border rounded text-center text-sm focus:ring-2 focus:ring-blue-500", placeholder: "0" %>
-                  </td>
-                </tr>
+                    <td class="px-3 py-2 text-center">
+                      <%= req.number_field :pharmacist_count, min: 0, class: "w-16 px-2 py-1 border rounded text-center text-sm focus:ring-2 focus:ring-blue-500", placeholder: "0" %>
+                    </td>
+                    <td class="px-3 py-2 text-center">
+                      <%= req.number_field :clerk_count, min: 0, class: "w-16 px-2 py-1 border rounded text-center text-sm focus:ring-2 focus:ring-blue-500", placeholder: "0" %>
+                    </td>
+                  </tr>
+                <% end %>
               <% end %>
             <% end %>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
 
-    <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
-      <p>※ 0を設定すると、その時間帯は人員不要として扱われます</p>
+      <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+        <p>※ 0を設定すると、その時間帯は人員不要として扱われます</p>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <!-- 送信ボタン -->
   <div class="flex gap-4">

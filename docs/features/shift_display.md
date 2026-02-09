@@ -2,7 +2,7 @@
 
 ## 概要
 
-日別・週別でシフトを表示し、各店舗の過不足状況を可視化する。
+日別・月別でシフトを表示し、各店舗のAM/PM別過不足状況を可視化する。
 
 ## 画面
 
@@ -14,9 +14,9 @@
 - 要調整（薬剤師）
 - 要調整（事務）
 
-**店舗カード:**
+**店舗カード（AM/PM別）:**
 - 店舗名
-- ステータス（不足/余剰/充足）
+- AM/PMそれぞれのステータス（不足/余剰/充足/休業）
 - 薬剤師: 現在人数 / 必要人数 (差分)
 - 事務: 現在人数 / 必要人数 (差分)
 - 勤務スタッフ一覧
@@ -24,23 +24,24 @@
 
 **ナビゲーション:**
 - 前日/翌日ボタン
-- 週間一覧へのリンク
+- 月間一覧へのリンク
 - AI提案へのリンク
 - CSVインポートへのリンク
 
-### 週間一覧 (`/shifts/weekly`)
+### 月間一覧 (`/shifts/monthly`)
 
-- 1週間分の過不足を一覧表示
-- 各日の状況を俯瞰できる
+- 1ヶ月分（16日〜翌月15日）の過不足を一覧表示
+- 各日・各店舗のAM/PM別状況を俯瞰できる
+- 凡例: 不足（赤）、余剰（緑）、充足（グレー）、休業（薄グレー）
+- 月間サマリー（AM/PM別の不足・余剰件数）
 
 ## ルーティング
 
 ```ruby
 resources :shifts, only: [:index] do
   collection do
-    get :weekly
+    get :monthly
     get :suggestions
-    post :apply_suggestion
   end
 end
 ```
@@ -55,10 +56,13 @@ def index
   @shortage_data = ShortageCalculatorService.calculate_all(@date)
 end
 
-def weekly
-  @start_date = params[:start_date] ? Date.parse(params[:start_date]) : Date.today.beginning_of_week
-  @end_date = @start_date + 6.days
-  @weekly_data = ShortageCalculatorService.calculate_range(@start_date, @end_date)
+def monthly
+  @period = parse_period(params[:period])
+  @monthly_data = ShortageCalculatorService.calculate_range(
+    @period[:start_date],
+    @period[:end_date]
+  )
+  @stores = Store.order(:code).all
 end
 ```
 
@@ -67,7 +71,7 @@ end
 ### ShortageCalculatorService
 
 **calculate_all(date):**
-- 指定日の全店舗の過不足を算出
+- 指定日の全店舗のAM/PM別過不足を算出
 - 返り値:
   ```ruby
   {
@@ -77,32 +81,43 @@ end
         id: Integer,
         code: String,
         name: String,
-        status: :shortage | :surplus | :ok,
-        pharmacist: { current: Integer, required: Integer, diff: Integer },
-        clerk: { current: Integer, required: Integer, diff: Integer },
-        staff_list: { pharmacists: [String], clerks: [String] }
+        combined_status: :shortage | :surplus | :ok | :closed,
+        am: {
+          status: :shortage | :surplus | :ok | :closed,
+          pharmacist: { current: Integer, required: Integer, diff: Integer },
+          clerk: { current: Integer, required: Integer, diff: Integer },
+          staff_list: { pharmacists: [String], clerks: [String] }
+        },
+        pm: {
+          status: :shortage | :surplus | :ok | :closed,
+          pharmacist: { current: Integer, required: Integer, diff: Integer },
+          clerk: { current: Integer, required: Integer, diff: Integer },
+          staff_list: { pharmacists: [String], clerks: [String] }
+        }
       }
     ],
     summary: {
-      shortage_stores: Integer,
-      surplus_stores: Integer,
-      ok_stores: Integer,
-      total_pharmacist_shortage: Integer,
-      total_clerk_shortage: Integer
+      am: { shortage_stores: Integer, surplus_stores: Integer, ... },
+      pm: { shortage_stores: Integer, surplus_stores: Integer, ... },
+      combined: {
+        shortage_stores: Integer,
+        surplus_stores: Integer,
+        ok_stores: Integer,
+        total_pharmacist_shortage: Integer,
+        total_clerk_shortage: Integer
+      }
     }
   }
   ```
 
 **calculate_range(start_date, end_date):**
-- 期間内の各日のデータを配列で返す
+- 期間内の各日のAM/PM別データを配列で返す
 
-## 曜日タイプ判定
+## 曜日判定
 
-`Store.day_type_for(date)` で判定:
-- 祝日 → :holiday
-- 日曜 → :holiday
-- 土曜 → :saturday
-- 平日 → :weekday
+曜日ごと（0:日〜6:土）× 時間帯（AM/PM）で必要人数を設定:
+- `StoreRequirement` で曜日・時間帯別の必要人数を管理
+- 必要人数が0の場合は「休業」として扱う
 
 祝日判定は `holiday_jp` gem を使用。
 
@@ -111,4 +126,7 @@ end
 - [app/controllers/shifts_controller.rb](../../app/controllers/shifts_controller.rb)
 - [app/services/shortage_calculator_service.rb](../../app/services/shortage_calculator_service.rb)
 - [app/views/shifts/index.html.erb](../../app/views/shifts/index.html.erb)
+- [app/views/shifts/monthly.html.erb](../../app/views/shifts/monthly.html.erb)
 - [app/models/store.rb](../../app/models/store.rb)
+- [app/models/store_requirement.rb](../../app/models/store_requirement.rb)
+- [app/helpers/shifts_helper.rb](../../app/helpers/shifts_helper.rb)

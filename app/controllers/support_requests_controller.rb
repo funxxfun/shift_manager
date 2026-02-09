@@ -1,6 +1,7 @@
 # app/controllers/support_requests_controller.rb
 class SupportRequestsController < ApplicationController
-  before_action :require_store_manager_or_above!
+  before_action :require_store_manager_or_above!, only: [:index, :approve, :reject]
+  before_action :require_manager_or_above!, only: [:create]
   before_action :set_support_request, only: [:approve, :reject]
   before_action :authorize_response!, only: [:approve, :reject]
 

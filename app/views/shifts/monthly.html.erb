@@ -13,9 +13,6 @@
       <%= link_to shifts_path, class: "px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" do %>
         日別ビュー
       <% end %>
-      <%= link_to weekly_shifts_path, class: "px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50" do %>
-        週間一覧
-      <% end %>
       <%= link_to monthly_shifts_path(period: "#{@period[:year]}-#{format('%02d', @period[:month])}"), class: "px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium" do %>
         月間一覧
       <% end %>

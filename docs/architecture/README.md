@@ -91,14 +91,16 @@
 ```
 app/
 ├── controllers/
-│   ├── shifts_controller.rb      # シフト表示・AI提案適用
-│   ├── imports_controller.rb     # CSVインポート
-│   └── stores_controller.rb      # 店舗管理
+│   ├── shifts_controller.rb           # シフト表示
+│   ├── support_requests_controller.rb # 応援要請管理
+│   ├── imports_controller.rb          # CSVインポート
+│   └── stores_controller.rb           # 店舗管理
 ├── models/
 │   ├── shift.rb                  # シフト
 │   ├── staff.rb                  # スタッフ（薬剤師/事務）
 │   ├── store.rb                  # 店舗
-│   └── store_requirement.rb      # 店舗必要人数
+│   ├── store_requirement.rb      # 店舗必要人数
+│   └── support_request.rb        # 応援要請
 ├── services/
 │   ├── ai_suggestion_service.rb      # AI補填提案
 │   ├── csv_import_service.rb         # CSVインポート
@@ -106,7 +108,10 @@ app/
 └── views/
     ├── shifts/
     │   ├── index.html.erb        # 日別ビュー
+    │   ├── monthly.html.erb      # 月間一覧
     │   └── suggestions.html.erb  # AI提案画面
+    ├── support_requests/
+    │   └── index.html.erb        # 承認待ち一覧
     ├── imports/
     │   └── new.html.erb          # CSVインポート画面
     └── stores/
@@ -149,11 +154,12 @@ staffs ─────────< shifts >───────── stores
 |--------|-----|------|------|
 | id | bigint | PK | |
 | store_id | bigint | FK, NOT NULL | 店舗 |
-| day_type | integer | NOT NULL | 曜日タイプ（0:平日, 1:土曜, 2:日祝） |
+| day_of_week | integer | NOT NULL | 曜日（0:日〜6:土） |
+| shift_period | string | NOT NULL | 時間帯（am/pm） |
 | pharmacist_count | integer | NOT NULL | 必要薬剤師数 |
 | clerk_count | integer | NOT NULL | 必要事務数 |
 
-制約: UNIQUE(store_id, day_type)
+制約: UNIQUE(store_id, day_of_week, shift_period)
 
 #### staffs（スタッフ）
 
@@ -173,12 +179,27 @@ staffs ─────────< shifts >───────── stores
 | date | date | NOT NULL | 勤務日 |
 | staff_id | bigint | FK, NOT NULL | スタッフ |
 | store_id | bigint | FK, NOT NULL | 勤務店舗 |
+| shift_period | string | NOT NULL | 時間帯（am/pm/full） |
 | start_time | time | | 出勤時間 |
 | end_time | time | | 退勤時間 |
 | break_minutes | integer | DEFAULT 60 | 休憩時間（分） |
 | status | integer | DEFAULT 0 | 0:予定, 1:確定, 2:応援 |
 
-制約: UNIQUE(date, staff_id) - 1人1日1シフト
+制約: UNIQUE(date, staff_id, shift_period) - 1人1日1時間帯1シフト
+
+#### support_requests（応援要請）
+
+| カラム | 型 | 制約 | 説明 |
+|--------|-----|------|------|
+| id | bigint | PK | |
+| shift_id | bigint | FK, NOT NULL | 対象シフト |
+| requesting_store_id | bigint | FK, NOT NULL | 要請元店舗（不足店舗） |
+| requested_by_id | bigint | FK, NOT NULL | 要請者 |
+| responded_by_id | bigint | FK | 承認者 |
+| status | integer | DEFAULT 0 | 0:pending, 1:approved, 2:rejected |
+| reason | text | | 要請理由 |
+| response_note | text | | 承認/却下時のコメント |
+| responded_at | datetime | | 承認/却下日時 |
 
 ---
 
@@ -213,14 +234,18 @@ staffs ─────────< shifts >───────── stores
          → 過不足データをビューに表示
 ```
 
-### AI提案フロー
+### AI提案・応援要請フロー
 
 ```
-ユーザー → ShiftsController#suggestions
-         → AiSuggestionService.suggest
-         → (Claude API or ルールベース)
-         → 提案をビューに表示
-         → apply_suggestion で適用
+管理者 → ShiftsController#suggestions
+       → AiSuggestionService.suggest
+       → (Claude API or ルールベース)
+       → 提案をビューに表示
+       → SupportRequestsController#create で応援要請作成
+
+余剰店舗管理者 → SupportRequestsController#index
+              → 承認待ち一覧を表示
+              → approve で承認 → シフトを移動先店舗に変更
 ```
 
 ### CSVインポートフロー
@@ -239,12 +264,12 @@ staffs ─────────< shifts >───────── stores
 | カテゴリ | 機能 | 状態 |
 |---------|------|------|
 | データ管理 | CSVインポート | 実装済み |
-| データ管理 | 店舗必要人数設定 | 実装済み |
-| 過不足算出 | 日別表示 | 実装済み |
-| 過不足算出 | 週間一覧 | 実装済み |
+| データ管理 | 店舗必要人数設定（曜日×AM/PM） | 実装済み |
+| 過不足算出 | 日別表示（AM/PM別） | 実装済み |
+| 過不足算出 | 月間一覧 | 実装済み |
 | 補填 | 店舗間共有 | 未実装 |
 | 補填 | AI提案 | 実装済み |
-| 補填 | 自動補填 | 一部実装 |
+| 補填 | 応援要請・承認フロー | 実装済み |
 | 権限 | ユーザー認証 | 実装済み |
 | 権限 | 権限管理 | 実装済み |
 
@@ -272,11 +297,24 @@ staffs ─────────< shifts >───────── stores
 
 ---
 
-## 9. 権限設計（予定）
+## 9. 権限設計
 
 | 権限 | できること |
 |------|-----------|
-| 店舗スタッフ | 自店舗のシフト確認、補填の立候補 |
-| 店舗管理者 | 自店舗の必要人数設定 |
-| エリアマネージャー | 担当エリアの補填実行 |
-| 本部管理者 | 全店舗の補填実行、設定変更 |
+| 店舗スタッフ | 自店舗のシフト確認 |
+| 店舗管理者 | 自店舗のシフト確認、自店舗スタッフへの応援要請の承認 |
+| エリアマネージャー | 全店舗閲覧、必要人数設定、AI提案からの応援要請送信、全店舗の応援要請承認 |
+| 本部管理者 | 全権限（店舗CRUD含む） |
+
+### 機能別権限マトリクス
+
+| 機能 | staff | store_manager | area_manager | admin |
+|------|-------|---------------|--------------|-------|
+| シフト閲覧 | 自店舗 | 自店舗 | 全店舗 | 全店舗 |
+| 月間一覧閲覧 | O | O | O | O |
+| 必要人数設定 | - | - | O | O |
+| AI提案閲覧 | O | O | O | O |
+| 応援要請送信 | - | - | O | O |
+| 応援要請承認 | - | 自店舗スタッフ | O | O |
+| 店舗登録・削除 | - | - | - | O |
+| スタッフ管理 | - | 自店舗 | 担当エリア | O |
