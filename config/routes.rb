@@ -12,7 +12,14 @@ Rails.application.routes.draw do
       get :weekly
       get :monthly
       get :suggestions
-      post :apply_suggestion
+    end
+  end
+
+  # 応援要請
+  resources :support_requests, only: [:index, :create] do
+    member do
+      post :approve
+      post :reject
     end
   end
 

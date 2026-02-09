@@ -214,6 +214,10 @@ class AiSuggestionService
 
       next unless staff && from_store && to_store
 
+      # candidateからshiftを取得
+      candidate = candidates.find { |c| c[:staff].id == staff.id }
+      shift_id = candidate&.dig(:shift)&.id
+
       {
         staff: staff,
         from_store: from_store,
@@ -221,7 +225,8 @@ class AiSuggestionService
         role: staff.role,
         reason: s['reason'],
         date: date,
-        shift_period: period
+        shift_period: period,
+        shift_id: shift_id
       }
     end.compact
   rescue JSON::ParserError
@@ -236,7 +241,8 @@ class AiSuggestionService
       role: candidate[:role],
       reason: reason,
       date: date,
-      shift_period: candidate[:period]
+      shift_period: candidate[:period],
+      shift_id: candidate[:shift]&.id
     }
   end
 end

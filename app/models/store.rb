@@ -4,6 +4,10 @@ class Store < ApplicationRecord
   has_many :store_operating_hours, dependent: :destroy
   has_many :shifts, dependent: :destroy
   has_many :staffs, foreign_key: :base_store_id
+  has_many :support_requests_as_requester,
+           class_name: 'SupportRequest',
+           foreign_key: :requesting_store_id,
+           dependent: :destroy
 
   accepts_nested_attributes_for :store_requirements, allow_destroy: true
   accepts_nested_attributes_for :store_operating_hours, allow_destroy: true
@@ -89,6 +93,15 @@ class Store < ApplicationRecord
   # 指定日に完全休業か
   def closed_on?(date)
     !open_on?(date)
+  end
+
+  # 自店舗スタッフへの承認待ち応援要請
+  def pending_support_requests
+    SupportRequest.pending_for_store(self)
+  end
+
+  def pending_support_requests_count
+    pending_support_requests.count
   end
 
   private

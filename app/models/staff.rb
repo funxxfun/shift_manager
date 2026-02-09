@@ -2,6 +2,14 @@
 class Staff < ApplicationRecord
   belongs_to :base_store, class_name: 'Store', optional: true
   has_many :shifts, dependent: :destroy
+  has_many :support_requests_created,
+           class_name: 'SupportRequest',
+           foreign_key: :requested_by_id,
+           dependent: :nullify
+  has_many :support_requests_responded,
+           class_name: 'SupportRequest',
+           foreign_key: :responded_by_id,
+           dependent: :nullify
 
   enum role: { pharmacist: 0, clerk: 1 }
   enum permission_level: {

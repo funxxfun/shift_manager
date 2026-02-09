@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_09_062421) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_09_072349) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -79,9 +79,31 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_09_062421) do
     t.index ["code"], name: "index_stores_on_code", unique: true
   end
 
+  create_table "support_requests", force: :cascade do |t|
+    t.bigint "shift_id", null: false
+    t.bigint "requesting_store_id", null: false
+    t.bigint "requested_by_id", null: false
+    t.bigint "responded_by_id"
+    t.integer "status", default: 0, null: false
+    t.text "reason"
+    t.text "response_note"
+    t.datetime "responded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["requested_by_id"], name: "index_support_requests_on_requested_by_id"
+    t.index ["requesting_store_id"], name: "index_support_requests_on_requesting_store_id"
+    t.index ["responded_by_id"], name: "index_support_requests_on_responded_by_id"
+    t.index ["shift_id", "requesting_store_id"], name: "idx_pending_support_requests", unique: true, where: "(status = 0)"
+    t.index ["shift_id"], name: "index_support_requests_on_shift_id"
+  end
+
   add_foreign_key "shifts", "staffs"
   add_foreign_key "shifts", "stores"
   add_foreign_key "staffs", "stores", column: "base_store_id"
   add_foreign_key "store_operating_hours", "stores"
   add_foreign_key "store_requirements", "stores"
+  add_foreign_key "support_requests", "shifts"
+  add_foreign_key "support_requests", "staffs", column: "requested_by_id"
+  add_foreign_key "support_requests", "staffs", column: "responded_by_id"
+  add_foreign_key "support_requests", "stores", column: "requesting_store_id"
 end

@@ -2,6 +2,7 @@
 class Shift < ApplicationRecord
   belongs_to :staff
   belongs_to :store
+  has_many :support_requests, dependent: :destroy
 
   enum :status, { scheduled: 0, confirmed: 1, support: 2 }
   enum :shift_period, { am: 0, pm: 1, full_day: 2 }

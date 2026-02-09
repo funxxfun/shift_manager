@@ -72,6 +72,58 @@ module ShiftsHelper
     end
   end
 
+  # AI提案カードのレンダリング
+  def render_suggestion(suggestion, date)
+    can_request = current_staff.store_manager_or_above?
+    already_requested = suggestion[:shift_id] && SupportRequest.pending.exists?(
+      shift_id: suggestion[:shift_id],
+      requesting_store_id: suggestion[:to_store].id
+    )
+
+    content_tag(:div, class: 'bg-gray-50 rounded-lg p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4') do
+      info_section = content_tag(:div, class: 'flex-1') do
+        staff_line = content_tag(:div, class: 'font-medium') do
+          content_tag(:span, suggestion[:staff].name, class: 'text-purple-600 font-bold') +
+          content_tag(:span, "（#{suggestion[:staff].role_label}）", class: 'text-gray-500') +
+          'を'
+        end
+
+        move_line = content_tag(:div, class: 'text-lg mt-1') do
+          content_tag(:span, suggestion[:from_store].name, class: 'font-bold') +
+          content_tag(:span, '→', class: 'mx-2') +
+          content_tag(:span, suggestion[:to_store].name, class: 'font-bold text-red-600') +
+          'へ移動'
+        end
+
+        reason_line = content_tag(:div, suggestion[:reason], class: 'text-sm text-gray-500 mt-2')
+
+        staff_line + move_line + reason_line
+      end
+
+      button_section = if already_requested
+        content_tag(:span, '要請済み', class: 'px-6 py-3 bg-yellow-100 text-yellow-700 rounded-lg font-bold text-sm')
+      elsif can_request && suggestion[:shift_id]
+        button_to support_requests_path,
+          method: :post,
+          params: {
+            support_request: {
+              shift_id: suggestion[:shift_id],
+              requesting_store_id: suggestion[:to_store].id,
+              reason: suggestion[:reason]
+            },
+            date: date
+          },
+          class: 'px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition' do
+          '応援要請'
+        end
+      else
+        content_tag(:span, '権限なし', class: 'px-6 py-3 bg-gray-300 text-gray-500 rounded-lg font-bold text-sm')
+      end
+
+      info_section + button_section
+    end
+  end
+
   private
 
   def period_tooltip(period_data)
