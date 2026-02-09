@@ -86,6 +86,8 @@ class ShortageCalculatorService
   end
 
   def self.determine_status(shortage)
+    return :closed if shortage[:closed]
+
     if shortage[:pharmacist] < 0 || shortage[:clerk] < 0
       :shortage
     elsif shortage[:pharmacist] > 0 || shortage[:clerk] > 0
@@ -96,9 +98,16 @@ class ShortageCalculatorService
   end
 
   def self.determine_combined_status(status_am, status_pm)
-    if status_am == :shortage || status_pm == :shortage
+    # 両方closedなら閉店
+    return :closed if status_am == :closed && status_pm == :closed
+
+    # closedでない方のステータスを優先
+    statuses = [status_am, status_pm].reject { |s| s == :closed }
+    return :closed if statuses.empty?
+
+    if statuses.include?(:shortage)
       :shortage
-    elsif status_am == :surplus || status_pm == :surplus
+    elsif statuses.include?(:surplus)
       :surplus
     else
       :ok
@@ -113,6 +122,8 @@ class ShortageCalculatorService
       summary[:total_clerk_shortage] += [shortage[:clerk], 0].min.abs
     when :surplus
       summary[:surplus_stores] += 1
+    when :closed
+      # 休業店舗はカウントしない
     else
       summary[:ok_stores] += 1
     end
@@ -122,12 +133,14 @@ class ShortageCalculatorService
     case status
     when :shortage
       summary[:shortage_stores] += 1
-      summary[:total_pharmacist_shortage] += [shortage_am[:pharmacist], 0].min.abs
-      summary[:total_pharmacist_shortage] += [shortage_pm[:pharmacist], 0].min.abs
-      summary[:total_clerk_shortage] += [shortage_am[:clerk], 0].min.abs
-      summary[:total_clerk_shortage] += [shortage_pm[:clerk], 0].min.abs
+      summary[:total_pharmacist_shortage] += [shortage_am[:pharmacist], 0].min.abs unless shortage_am[:closed]
+      summary[:total_pharmacist_shortage] += [shortage_pm[:pharmacist], 0].min.abs unless shortage_pm[:closed]
+      summary[:total_clerk_shortage] += [shortage_am[:clerk], 0].min.abs unless shortage_am[:closed]
+      summary[:total_clerk_shortage] += [shortage_pm[:clerk], 0].min.abs unless shortage_pm[:closed]
     when :surplus
       summary[:surplus_stores] += 1
+    when :closed
+      # 完全休業店舗はカウントしない
     else
       summary[:ok_stores] += 1
     end

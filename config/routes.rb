@@ -16,7 +16,10 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :stores
+  resources :stores do
+    resource :operating_hours, only: [:edit, :update],
+             controller: 'store_operating_hours'
+  end
   resources :staffs
   
   resources :imports, only: [:new, :create]

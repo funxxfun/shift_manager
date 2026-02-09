@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_02_09_051700) do
+ActiveRecord::Schema[7.1].define(version: 2026_02_09_062421) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -45,15 +45,27 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_09_051700) do
     t.index ["code"], name: "index_staffs_on_code", unique: true
   end
 
+  create_table "store_operating_hours", force: :cascade do |t|
+    t.bigint "store_id", null: false
+    t.integer "day_of_week", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "is_closed", default: false, null: false
+    t.time "open_time"
+    t.time "close_time"
+    t.index ["store_id", "day_of_week"], name: "index_store_operating_hours_on_store_id_and_day_of_week", unique: true
+    t.index ["store_id"], name: "index_store_operating_hours_on_store_id"
+  end
+
   create_table "store_requirements", force: :cascade do |t|
     t.bigint "store_id", null: false
-    t.integer "day_type", default: 0, null: false
     t.integer "pharmacist_count", default: 0, null: false
     t.integer "clerk_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "shift_period", default: 2, null: false
-    t.index ["store_id", "day_type", "shift_period"], name: "idx_on_store_id_day_type_shift_period_0c4830b254", unique: true
+    t.integer "shift_period", default: 0, null: false
+    t.integer "day_of_week", null: false
+    t.index ["store_id", "day_of_week", "shift_period"], name: "idx_store_requirements_unique", unique: true
     t.index ["store_id"], name: "index_store_requirements_on_store_id"
   end
 
@@ -70,5 +82,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_02_09_051700) do
   add_foreign_key "shifts", "staffs"
   add_foreign_key "shifts", "stores"
   add_foreign_key "staffs", "stores", column: "base_store_id"
+  add_foreign_key "store_operating_hours", "stores"
   add_foreign_key "store_requirements", "stores"
 end

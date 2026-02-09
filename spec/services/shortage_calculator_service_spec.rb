@@ -8,7 +8,7 @@ RSpec.describe ShortageCalculatorService, type: :service do
       it '空の結果を返す' do
         result = described_class.calculate_all(date)
         expect(result[:stores]).to be_empty
-        expect(result[:summary][:shortage_stores]).to eq(0)
+        expect(result[:summary][:combined][:shortage_stores]).to eq(0)
       end
     end
 
@@ -17,47 +17,50 @@ RSpec.describe ShortageCalculatorService, type: :service do
       let!(:store2) { create(:store, name: '店舗B') }
 
       before do
-        # 店舗A: 薬剤師2名、事務1名必要
-        create(:store_requirement, store: store1, day_type: :weekday, pharmacist_count: 2, clerk_count: 1)
-        # 店舗B: 薬剤師1名、事務1名必要
-        create(:store_requirement, store: store2, day_type: :weekday, pharmacist_count: 1, clerk_count: 1)
+        # 店舗A: 薬剤師2名、事務1名必要（AM/PM両方）
+        create(:store_requirement, store: store1, day_type: :weekday, shift_period: :am, pharmacist_count: 2, clerk_count: 1)
+        create(:store_requirement, store: store1, day_type: :weekday, shift_period: :pm, pharmacist_count: 2, clerk_count: 1)
+        # 店舗B: 薬剤師1名、事務1名必要（AM/PM両方）
+        create(:store_requirement, store: store2, day_type: :weekday, shift_period: :am, pharmacist_count: 1, clerk_count: 1)
+        create(:store_requirement, store: store2, day_type: :weekday, shift_period: :pm, pharmacist_count: 1, clerk_count: 1)
       end
 
       it '不足店舗を正しくカウント' do
-        # 店舗Aに薬剤師1名（不足）
+        # 店舗Aに薬剤師1名（不足）- AM/PM両方
         pharmacist_a = create(:staff, :pharmacist, base_store: store1)
-        create(:shift, store: store1, staff: pharmacist_a, date: date)
+        create(:shift, store: store1, staff: pharmacist_a, date: date, shift_period: :full_day)
 
         result = described_class.calculate_all(date)
-        expect(result[:summary][:shortage_stores]).to eq(2) # 両店舗とも不足
+        # AM/PM別にカウントされるので、両店舗で2件ずつ
+        expect(result[:summary][:combined][:shortage_stores]).to eq(2)
       end
 
       it '余剰店舗を正しくカウント' do
-        # 店舗Aに薬剤師3名、事務2名（余剰）
+        # 店舗Aに薬剤師3名、事務2名（余剰）- AM/PM両方
         3.times do
           staff = create(:staff, :pharmacist, base_store: store1)
-          create(:shift, store: store1, staff: staff, date: date)
+          create(:shift, store: store1, staff: staff, date: date, shift_period: :full_day)
         end
         2.times do
           staff = create(:staff, :clerk, base_store: store1)
-          create(:shift, store: store1, staff: staff, date: date)
+          create(:shift, store: store1, staff: staff, date: date, shift_period: :full_day)
         end
 
         result = described_class.calculate_all(date)
         store1_data = result[:stores].find { |s| s[:id] == store1.id }
-        expect(store1_data[:status]).to eq(:surplus)
+        expect(store1_data[:combined_status]).to eq(:surplus)
       end
 
       it 'OK店舗を正しくカウント' do
-        # 店舗Bに薬剤師1名、事務1名（ちょうど）
+        # 店舗Bに薬剤師1名、事務1名（ちょうど）- AM/PM両方
         pharmacist = create(:staff, :pharmacist, base_store: store2)
         clerk = create(:staff, :clerk, base_store: store2)
-        create(:shift, store: store2, staff: pharmacist, date: date)
-        create(:shift, store: store2, staff: clerk, date: date)
+        create(:shift, store: store2, staff: pharmacist, date: date, shift_period: :full_day)
+        create(:shift, store: store2, staff: clerk, date: date, shift_period: :full_day)
 
         result = described_class.calculate_all(date)
         store2_data = result[:stores].find { |s| s[:id] == store2.id }
-        expect(store2_data[:status]).to eq(:ok)
+        expect(store2_data[:combined_status]).to eq(:ok)
       end
     end
   end

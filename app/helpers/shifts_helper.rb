@@ -43,6 +43,8 @@ module ShiftsHelper
       'bg-red-500'
     when :surplus
       'bg-green-500'
+    when :closed
+      'bg-gray-400 opacity-50'
     else
       'bg-gray-300'
     end
@@ -74,6 +76,7 @@ module ShiftsHelper
 
   def period_tooltip(period_data)
     return 'データなし' unless period_data
+    return '休業' if period_data[:status] == :closed
     ph_diff = period_data[:pharmacist][:diff]
     cl_diff = period_data[:clerk][:diff]
     "薬剤師: #{ph_diff >= 0 ? '+' : ''}#{ph_diff}, 事務: #{cl_diff >= 0 ? '+' : ''}#{cl_diff}"

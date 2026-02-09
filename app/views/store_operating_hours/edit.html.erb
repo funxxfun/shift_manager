@@ -1,0 +1,115 @@
+<%# app/views/store_operating_hours/edit.html.erb %>
+
+<div class="min-h-screen bg-gray-100">
+  <!-- ヘッダー -->
+  <header class="bg-gradient-to-r from-emerald-600 to-emerald-800 text-white py-4 px-6 shadow-lg">
+    <h1 class="text-xl font-bold">営業時間設定</h1>
+    <p class="text-sm opacity-90"><%= @store.name %>の曜日別営業時間</p>
+  </header>
+
+  <div class="max-w-2xl mx-auto px-4 py-6">
+    <!-- 戻るリンク -->
+    <div class="mb-4">
+      <%= link_to stores_path, class: "text-blue-600 hover:underline text-sm" do %>
+        ← 店舗一覧に戻る
+      <% end %>
+    </div>
+
+    <%= form_with model: @store, url: store_operating_hours_path(@store), method: :patch, class: "bg-white rounded-xl shadow p-6" do |f| %>
+      <% if @store.errors.any? %>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          <ul>
+            <% @store.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="mb-6">
+        <p class="text-sm text-gray-600 mb-2">
+          各曜日の営業時間を設定してください。
+        </p>
+        <p class="text-xs text-gray-500">
+          例: 8:30〜19:00
+        </p>
+      </div>
+
+      <!-- 曜日別設定テーブル -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">曜日</th>
+              <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">休業</th>
+              <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">開店時刻</th>
+              <th class="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase">閉店時刻</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <%= f.fields_for :store_operating_hours, @operating_hours do |oh_f| %>
+              <%
+                day = oh_f.object.day_of_week
+                day_name = StoreOperatingHour::DAY_NAMES[day]
+                day_class = case day
+                            when 0 then 'text-red-500 font-bold'
+                            when 6 then 'text-blue-500 font-bold'
+                            else 'text-gray-700'
+                            end
+              %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 <%= day_class %>">
+                  <%= day_name %>曜日
+                  <%= oh_f.hidden_field :day_of_week %>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <%= oh_f.check_box :is_closed,
+                      class: "w-5 h-5 text-red-600 rounded focus:ring-red-500",
+                      data: { action: "change->operating-hours#toggleClosed" } %>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <%= oh_f.time_field :open_time,
+                      class: "w-28 px-2 py-1 border rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-center",
+                      disabled: oh_f.object.is_closed %>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <%= oh_f.time_field :close_time,
+                      class: "w-28 px-2 py-1 border rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-center",
+                      disabled: oh_f.object.is_closed %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 凡例 -->
+      <div class="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+        <p>※ 「休業」にチェックを入れると、その曜日は休業日として扱われます</p>
+        <p>※ 営業時間は12:00を境界にAM/PMを自動判定します</p>
+      </div>
+
+      <!-- ボタン -->
+      <div class="mt-6 flex gap-3">
+        <%= f.submit '保存', class: "px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-medium cursor-pointer" %>
+        <%= link_to 'キャンセル', stores_path, class: "px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  // 休業チェックボックスの変更時に時刻入力フィールドを無効化
+  document.querySelectorAll('input[type="checkbox"][name*="is_closed"]').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const row = this.closest('tr');
+      const timeInputs = row.querySelectorAll('input[type="time"]');
+      timeInputs.forEach(input => {
+        input.disabled = this.checked;
+        if (this.checked) {
+          input.value = '';
+        }
+      });
+    });
+  });
+</script>

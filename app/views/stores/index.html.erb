@@ -62,31 +62,28 @@
                   </div>
                 <% end %>
 
-                <!-- 必要人数サマリー -->
+                <!-- 必要人数サマリー（月曜AM/PMを代表として表示） -->
                 <div class="flex flex-wrap gap-2">
-                  <% weekday_req = store.store_requirements.find { |r| r.weekday? } %>
-                  <% if weekday_req %>
-                    <div class="bg-gray-50 rounded-lg px-3 py-2 text-xs">
-                      <span class="text-gray-500">平日</span>
-                      <span class="ml-2">💊<span class="font-bold text-blue-600"><%= weekday_req.pharmacist_count %></span></span>
-                      <span class="ml-1">📋<span class="font-bold text-gray-600"><%= weekday_req.clerk_count %></span></span>
+                  <%
+                    mon_am = store.store_requirements.find { |r| r.day_of_week == 1 && r.am? }
+                    mon_pm = store.store_requirements.find { |r| r.day_of_week == 1 && r.pm? }
+                  %>
+                  <% if mon_am || mon_pm %>
+                    <div class="bg-blue-50 rounded-lg px-3 py-2 text-xs">
+                      <span class="text-gray-500">AM</span>
+                      <% if mon_am %>
+                        <span class="ml-1">💊<span class="font-bold text-blue-600"><%= mon_am.pharmacist_count %></span></span>
+                        <span class="ml-1">📋<span class="font-bold text-gray-600"><%= mon_am.clerk_count %></span></span>
+                      <% end %>
                     </div>
-                  <% end %>
-                  <% saturday_req = store.store_requirements.find { |r| r.saturday? } %>
-                  <% if saturday_req %>
-                    <div class="bg-gray-50 rounded-lg px-3 py-2 text-xs">
-                      <span class="text-gray-500">土曜</span>
-                      <span class="ml-2">💊<span class="font-bold text-blue-600"><%= saturday_req.pharmacist_count %></span></span>
-                      <span class="ml-1">📋<span class="font-bold text-gray-600"><%= saturday_req.clerk_count %></span></span>
+                    <div class="bg-orange-50 rounded-lg px-3 py-2 text-xs">
+                      <span class="text-gray-500">PM</span>
+                      <% if mon_pm %>
+                        <span class="ml-1">💊<span class="font-bold text-blue-600"><%= mon_pm.pharmacist_count %></span></span>
+                        <span class="ml-1">📋<span class="font-bold text-gray-600"><%= mon_pm.clerk_count %></span></span>
+                      <% end %>
                     </div>
-                  <% end %>
-                  <% holiday_req = store.store_requirements.find { |r| r.holiday? } %>
-                  <% if holiday_req %>
-                    <div class="bg-gray-50 rounded-lg px-3 py-2 text-xs">
-                      <span class="text-gray-500">日祝</span>
-                      <span class="ml-2">💊<span class="font-bold text-blue-600"><%= holiday_req.pharmacist_count %></span></span>
-                      <span class="ml-1">📋<span class="font-bold text-gray-600"><%= holiday_req.clerk_count %></span></span>
-                    </div>
+                    <span class="text-xs text-gray-400">（月曜）</span>
                   <% end %>
                   <% if store.store_requirements.empty? %>
                     <div class="text-xs text-orange-600">
@@ -105,6 +102,11 @@
                   </svg>
                 <% end %>
                 <% if current_staff.can_manage_store?(store) %>
+                  <%= link_to edit_store_operating_hours_path(store), class: "p-2 text-gray-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition", title: "営業時間" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  <% end %>
                   <%= link_to edit_store_path(store), class: "p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition", title: "編集" do %>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />

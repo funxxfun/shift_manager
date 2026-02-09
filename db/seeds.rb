@@ -1,40 +1,205 @@
 # db/seeds.rb
 
+puts "=== Shift Manager Seed ==="
+puts ""
+
+# ==============================
+# 店舗マスタ
+# ==============================
 puts "Creating stores..."
 
 stores_data = [
-  { code: '001', name: '博多駅前店', weekday: [2, 1], saturday: [1, 1] },
-  { code: '002', name: '天神店', weekday: [2, 2], saturday: [1, 1] },
-  { code: '003', name: '六本松店', weekday: [1, 1], saturday: [1, 1] },
-  { code: '004', name: '薬院店', weekday: [1, 1], saturday: [1, 1] },
-  { code: '005', name: '大橋店', weekday: [2, 1], saturday: [1, 1] },
-  { code: '006', name: '西新店', weekday: [1, 1], saturday: [1, 1] },
+  { code: '001', name: '博多駅前店', address: '福岡市博多区博多駅前2-1-1', nearest_station: '博多駅' },
+  { code: '002', name: '天神店', address: '福岡市中央区天神1-1-1', nearest_station: '天神駅' },
+  { code: '003', name: '六本松店', address: '福岡市中央区六本松3-1-1', nearest_station: '六本松駅' },
+  { code: '004', name: '薬院店', address: '福岡市中央区薬院1-1-1', nearest_station: '薬院駅' },
+  { code: '005', name: '大橋店', address: '福岡市南区大橋1-1-1', nearest_station: '大橋駅' },
+  { code: '006', name: '西新店', address: '福岡市早良区西新4-1-1', nearest_station: '西新駅' },
 ]
 
 stores_data.each do |data|
   store = Store.find_or_create_by!(code: data[:code]) do |s|
     s.name = data[:name]
+    s.address = data[:address]
+    s.nearest_station = data[:nearest_station]
   end
-
-  # 必要人数を設定
-  StoreRequirement.find_or_create_by!(store: store, day_type: :weekday) do |r|
-    r.pharmacist_count = data[:weekday][0]
-    r.clerk_count = data[:weekday][1]
-  end
-
-  StoreRequirement.find_or_create_by!(store: store, day_type: :saturday) do |r|
-    r.pharmacist_count = data[:saturday][0]
-    r.clerk_count = data[:saturday][1]
-  end
-
-  StoreRequirement.find_or_create_by!(store: store, day_type: :holiday) do |r|
-    r.pharmacist_count = 0
-    r.clerk_count = 0
-  end
-
   puts "  Created: #{store.name}"
 end
 
+# ==============================
+# 必要人数設定（曜日別 × AM/PM）
+# ==============================
+puts ""
+puts "Creating store requirements (day_of_week × AM/PM)..."
+
+# day_of_week: 0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土
+requirements_data = {
+  # 店舗コード => { 曜日(0-6) => { am: [薬,事], pm: [薬,事] } }
+  '001' => {
+    0 => { am: [0, 0], pm: [0, 0] },  # 日曜: 休業
+    1 => { am: [2, 1], pm: [2, 1] },  # 月曜
+    2 => { am: [2, 1], pm: [2, 1] },  # 火曜
+    3 => { am: [2, 1], pm: [2, 1] },  # 水曜
+    4 => { am: [2, 1], pm: [2, 1] },  # 木曜
+    5 => { am: [2, 1], pm: [2, 1] },  # 金曜
+    6 => { am: [1, 1], pm: [1, 1] },  # 土曜
+  },
+  '002' => {
+    0 => { am: [0, 0], pm: [0, 0] },
+    1 => { am: [2, 2], pm: [2, 2] },
+    2 => { am: [2, 2], pm: [2, 2] },
+    3 => { am: [2, 2], pm: [2, 2] },
+    4 => { am: [2, 2], pm: [2, 2] },
+    5 => { am: [2, 2], pm: [2, 2] },
+    6 => { am: [1, 1], pm: [1, 1] },
+  },
+  '003' => {
+    0 => { am: [0, 0], pm: [0, 0] },
+    1 => { am: [1, 1], pm: [1, 1] },
+    2 => { am: [1, 1], pm: [1, 1] },
+    3 => { am: [0, 0], pm: [0, 0] },  # 水曜定休
+    4 => { am: [1, 1], pm: [1, 1] },
+    5 => { am: [1, 1], pm: [1, 1] },
+    6 => { am: [1, 1], pm: [0, 0] },  # 土曜午前のみ
+  },
+  '004' => {
+    0 => { am: [0, 0], pm: [0, 0] },
+    1 => { am: [1, 1], pm: [1, 1] },
+    2 => { am: [1, 1], pm: [1, 1] },
+    3 => { am: [1, 1], pm: [1, 1] },
+    4 => { am: [1, 1], pm: [1, 1] },
+    5 => { am: [1, 1], pm: [1, 1] },
+    6 => { am: [1, 1], pm: [0, 0] },  # 土曜午前のみ
+  },
+  '005' => {
+    0 => { am: [0, 0], pm: [0, 0] },
+    1 => { am: [2, 1], pm: [2, 1] },
+    2 => { am: [2, 1], pm: [2, 1] },
+    3 => { am: [2, 1], pm: [2, 1] },
+    4 => { am: [2, 1], pm: [2, 1] },
+    5 => { am: [2, 1], pm: [2, 1] },
+    6 => { am: [1, 1], pm: [1, 1] },
+  },
+  '006' => {
+    0 => { am: [0, 0], pm: [0, 0] },
+    1 => { am: [1, 1], pm: [1, 1] },
+    2 => { am: [1, 1], pm: [1, 1] },
+    3 => { am: [1, 1], pm: [1, 1] },
+    4 => { am: [1, 1], pm: [1, 1] },
+    5 => { am: [1, 1], pm: [1, 1] },
+    6 => { am: [1, 1], pm: [1, 0] },  # 土曜午後は事務不要
+  }
+}
+
+requirements_data.each do |store_code, days|
+  store = Store.find_by!(code: store_code)
+
+  days.each do |day_of_week, periods|
+    periods.each do |period, counts|
+      StoreRequirement.find_or_create_by!(
+        store: store,
+        day_of_week: day_of_week,
+        shift_period: period
+      ) do |r|
+        r.pharmacist_count = counts[0]
+        r.clerk_count = counts[1]
+      end
+    end
+  end
+  puts "  #{store.name}: 必要人数設定完了"
+end
+
+# ==============================
+# 営業時間設定
+# ==============================
+puts ""
+puts "Creating store operating hours..."
+
+operating_hours_data = {
+  # 店舗コード => { 曜日(0-6) => [開店, 閉店] または :closed }
+  '001' => {
+    0 => :closed,                    # 日曜: 休業
+    1 => ['08:30', '19:00'],         # 月曜
+    2 => ['08:30', '19:00'],         # 火曜
+    3 => ['08:30', '19:00'],         # 水曜
+    4 => ['08:30', '19:00'],         # 木曜
+    5 => ['08:30', '19:00'],         # 金曜
+    6 => ['09:00', '17:00'],         # 土曜
+  },
+  '002' => {
+    0 => :closed,
+    1 => ['09:00', '20:00'],
+    2 => ['09:00', '20:00'],
+    3 => ['09:00', '20:00'],
+    4 => ['09:00', '20:00'],
+    5 => ['09:00', '20:00'],
+    6 => ['09:00', '18:00'],
+  },
+  '003' => {
+    0 => :closed,
+    1 => ['09:00', '18:00'],
+    2 => ['09:00', '18:00'],
+    3 => :closed,                    # 水曜定休
+    4 => ['09:00', '18:00'],
+    5 => ['09:00', '18:00'],
+    6 => ['09:00', '13:00'],         # 土曜午前のみ
+  },
+  '004' => {
+    0 => :closed,
+    1 => ['08:30', '18:30'],
+    2 => ['08:30', '18:30'],
+    3 => ['08:30', '18:30'],
+    4 => ['08:30', '18:30'],
+    5 => ['08:30', '18:30'],
+    6 => ['09:00', '12:00'],         # 土曜午前のみ
+  },
+  '005' => {
+    0 => :closed,
+    1 => ['08:30', '19:00'],
+    2 => ['08:30', '19:00'],
+    3 => ['08:30', '19:00'],
+    4 => ['08:30', '19:00'],
+    5 => ['08:30', '19:00'],
+    6 => ['09:00', '17:00'],
+  },
+  '006' => {
+    0 => :closed,
+    1 => ['09:00', '18:00'],
+    2 => ['09:00', '18:00'],
+    3 => ['09:00', '18:00'],
+    4 => ['09:00', '18:00'],
+    5 => ['09:00', '18:00'],
+    6 => ['09:00', '15:00'],
+  }
+}
+
+operating_hours_data.each do |store_code, days|
+  store = Store.find_by!(code: store_code)
+
+  days.each do |day_of_week, hours|
+    attrs = { store: store, day_of_week: day_of_week }
+
+    if hours == :closed
+      StoreOperatingHour.find_or_create_by!(attrs) do |oh|
+        oh.is_closed = true
+        oh.open_time = nil
+        oh.close_time = nil
+      end
+    else
+      StoreOperatingHour.find_or_create_by!(attrs) do |oh|
+        oh.is_closed = false
+        oh.open_time = hours[0]
+        oh.close_time = hours[1]
+      end
+    end
+  end
+  puts "  #{store.name}: 営業時間設定完了"
+end
+
+# ==============================
+# スタッフマスタ
+# ==============================
+puts ""
 puts "Creating staffs..."
 
 staffs_data = [
@@ -70,222 +235,1280 @@ staffs_data.each do |data|
     staff.base_store = store
     staff.permission_level = data[:permission_level] || :staff
   end
-  puts "  Created: #{data[:name]} (#{data[:permission_level] || 'staff'})"
+  permission = data[:permission_level]&.to_s || 'staff'
+  puts "  Created: #{data[:name]} (#{permission})"
 end
 
-# シフト作成用ヘルパー
-def create_shifts(date, assignments)
-  assignments.each do |store_code, staff_codes|
-    store = Store.find_by(code: store_code)
+# ==============================
+# シフト作成ヘルパー
+# ==============================
+def create_shift(date:, store_code:, staff_code:, period: :full_day, start_time: nil, end_time: nil)
+  store = Store.find_by!(code: store_code)
+  staff = Staff.find_by!(code: staff_code)
 
-    staff_codes.each do |staff_code|
-      staff = Staff.find_by(code: staff_code)
+  # 時間帯に応じたデフォルト時刻
+  times = case period.to_sym
+          when :am
+            { start: '09:00', end: '12:00' }
+          when :pm
+            { start: '13:00', end: '18:00' }
+          else # full_day
+            { start: '09:00', end: '18:00' }
+          end
 
-      Shift.find_or_create_by!(date: date, staff: staff) do |s|
-        s.store = store
-        s.start_time = "09:00"
-        s.end_time = "18:00"
-        s.break_minutes = 60
+  Shift.find_or_create_by!(date: date, staff: staff, shift_period: period) do |s|
+    s.store = store
+    s.start_time = start_time || times[:start]
+    s.end_time = end_time || times[:end]
+    s.break_minutes = period == :full_day ? 60 : 0
+  end
+end
+
+def create_shifts_for_day(date, assignments)
+  assignments.each do |store_code, staff_list|
+    staff_list.each do |staff_info|
+      if staff_info.is_a?(String)
+        # シンプルな形式: 終日勤務
+        create_shift(date: date, store_code: store_code, staff_code: staff_info, period: :full_day)
+      elsif staff_info.is_a?(Hash)
+        # 詳細形式: { code: 'E001', period: :am }
+        create_shift(
+          date: date,
+          store_code: store_code,
+          staff_code: staff_info[:code],
+          period: staff_info[:period] || :full_day
+        )
       end
     end
   end
 end
 
-puts "Creating sample shifts..."
-
 # ==============================
-# 2026年1月20日〜31日（AI提案テスト用）
+# サンプルシフトデータ（2026年2月〜3月）
 # ==============================
-puts "Creating January shifts for AI suggestion testing..."
+puts ""
+puts "Creating sample shifts for February and March..."
 
-# 1/20（火）- 大幅な不足（複数店舗で薬剤師不足）
-create_shifts(Date.new(2026, 1, 20), {
-  "001" => %w[E003],                    # 薬-2 事0（深刻な薬剤師不足）
-  "002" => %w[E006 E007],               # 薬-2 事0（薬剤師ゼロ）
-  "003" => %w[E008 E009],               # ちょうど
-  "004" => %w[E010 E011],               # ちょうど
-  "005" => %w[E012 E013 E014],          # ちょうど
-  "006" => %w[E015 E016],               # ちょうど
-})
-puts "  1/20: 博多・天神で薬剤師不足"
+# ========================================
+# 2月: 週ごとに異なるパターン
+# ========================================
 
-# 1/21（水）- 余剰店舗から不足店舗へ補填可能なパターン
-create_shifts(Date.new(2026, 1, 21), {
-  "001" => %w[E001 E002 E003 M001],     # 薬+1（余剰あり）
-  "002" => %w[E004 E005 E006 E007],     # ちょうど
-  "003" => %w[E009],                    # 薬-1 事0（不足）
-  "004" => %w[E011],                    # 薬-1 事0（不足）
-  "005" => %w[E012 E013 E014],          # ちょうど
-  "006" => %w[E015 E016 E008],          # 薬+1（E008応援で余剰）
-})
-puts "  1/21: 博多・西新が余剰、六本松・薬院が不足"
+# --- 第1週 (2/2-2/7): 通常運用（概ね充足） ---
+puts "  2月第1週: 通常運用"
 
-# 1/22（木）- 事務スタッフ不足パターン
-create_shifts(Date.new(2026, 1, 22), {
-  "001" => %w[E001 E002],               # 薬0 事-1
-  "002" => %w[E004 E005],               # 薬0 事-2
-  "003" => %w[E008],                    # 薬0 事-1
-  "004" => %w[E010 E011],               # ちょうど
-  "005" => %w[E012 E013 E014],          # ちょうど
-  "006" => %w[E015 E016 E003 E006],     # 事+2（事務余剰）
-})
-puts "  1/22: 複数店舗で事務不足、西新で事務余剰"
+(Date.new(2026, 2, 2)..Date.new(2026, 2, 7)).each do |date|
+  next if date.sunday?  # 日曜休業
 
-# 1/23（金）- 全店舗で軽微な不足
-create_shifts(Date.new(2026, 1, 23), {
-  "001" => %w[E001 E003],               # 薬-1
-  "002" => %w[E004 E006],               # 薬-1 事-1
-  "003" => %w[E009],                    # 薬-1
-  "004" => %w[E010],                    # 事-1
-  "005" => %w[E012 E014],               # 薬-1
-  "006" => %w[E015],                    # 事-1
-})
-puts "  1/23: 全店舗で軽微な不足"
+  # 水曜定休の店舗をスキップ
+  skip_003 = date.wednesday?
 
-# 1/24（土）- 土曜シフト（必要人数が少ない）
-create_shifts(Date.new(2026, 1, 24), {
-  "001" => %w[E001 E002 E003],          # 薬+1（土曜は薬1事1なので余剰）
-  "002" => %w[E004 E005 E006],          # 薬+1 事+1（余剰）
-  "003" => %w[E008],                    # 薬0 事-1
-  "004" => %w[E011],                    # 薬-1 事0
-  "005" => %w[E012 E014],               # 薬0 事0（ちょうど...薬1事1）
-  "006" => %w[E015],                    # 薬0 事-1
-})
-puts "  1/24（土）: 博多・天神が余剰、他店舗で微不足"
+  assignments = {
+    '001' => [
+      { code: 'E001', period: :full_day },
+      { code: 'E002', period: :full_day },
+      { code: 'E003', period: :full_day }
+    ],
+    '002' => [
+      { code: 'E004', period: :full_day },
+      { code: 'E005', period: :full_day },
+      { code: 'E006', period: :full_day },
+      { code: 'E007', period: :full_day }
+    ],
+    '003' => skip_003 ? [] : [
+      { code: 'E008', period: :full_day },
+      { code: 'E009', period: :full_day }
+    ],
+    '004' => [
+      { code: 'E010', period: date.saturday? ? :am : :full_day },
+      { code: 'E011', period: date.saturday? ? :am : :full_day }
+    ],
+    '005' => [
+      { code: 'E012', period: :full_day },
+      { code: 'E013', period: :full_day },
+      { code: 'E014', period: :full_day }
+    ],
+    '006' => [
+      { code: 'E015', period: :full_day },
+      { code: 'E016', period: :full_day }
+    ]
+  }
 
-# 1/25（日・祝）- 日祝は必要人数0なので全員余剰
-create_shifts(Date.new(2026, 1, 25), {
-  "001" => %w[E001],                    # 余剰
-  "002" => %w[E004],                    # 余剰
-  "003" => %w[],                        # なし
-  "004" => %w[],                        # なし
-  "005" => %w[E012],                    # 余剰
-  "006" => %w[],                        # なし
-})
-puts "  1/25（日）: 日祝シフト"
-
-# 1/26（月）- バランス良好
-create_shifts(Date.new(2026, 1, 26), {
-  "001" => %w[E001 E002 E003],          # ちょうど
-  "002" => %w[E004 E005 E006 E007],     # ちょうど
-  "003" => %w[E008 E009],               # ちょうど
-  "004" => %w[E010 E011],               # ちょうど
-  "005" => %w[E012 E013 E014],          # ちょうど
-  "006" => %w[E015 E016],               # ちょうど
-})
-puts "  1/26: バランス良好（過不足なし）"
-
-# 1/27（火）- 大規模な偏り（一部店舗に集中）
-create_shifts(Date.new(2026, 1, 27), {
-  "001" => %w[E001 E002 E003 E008 E010 E015], # 薬+3（大幅余剰）
-  "002" => %w[E004 E005 E006 E007],     # ちょうど
-  "003" => %w[E009],                    # 薬-1 事0
-  "004" => %w[E011],                    # 薬-1 事0
-  "005" => %w[E014],                    # 薬-2 事0
-  "006" => %w[E016],                    # 薬-1 事0
-})
-puts "  1/27: 博多駅前に集中、他店舗で薬剤師不足"
-
-# 1/28（水）- 事務過剰・薬剤師不足
-create_shifts(Date.new(2026, 1, 28), {
-  "001" => %w[E003 E009 E011],          # 薬-2 事+2
-  "002" => %w[E006 E007 E014 E016],     # 薬-2 事+2
-  "003" => %w[E008],                    # 薬0 事-1
-  "004" => %w[E010],                    # 薬0 事-1
-  "005" => %w[E012 E013],               # 薬0 事-1
-  "006" => %w[E015],                    # 薬0 事-1
-})
-puts "  1/28: 博多・天神で事務過剰＆薬剤師不足"
-
-# 1/29（木）- 薬剤師のみ大幅余剰
-create_shifts(Date.new(2026, 1, 29), {
-  "001" => %w[E001 E002 E003 E004],     # 薬+1
-  "002" => %w[E005 E006 E007 E008],     # 薬+1（E008応援）
-  "003" => %w[E010 E009],               # 薬+1（E010応援）
-  "004" => %w[E011],                    # 薬-1 事0
-  "005" => %w[E012 E013 E014 E015],     # 薬+1（E015応援）
-  "006" => %w[E016],                    # 薬-1 事0
-})
-puts "  1/29: 薬剤師余剰、薬院・西新で不足"
-
-# 1/30（金）- 複雑な過不足パターン
-create_shifts(Date.new(2026, 1, 30), {
-  "001" => %w[E002 E003],               # 薬-1 事0
-  "002" => %w[E004 E005 E006],          # 薬0 事-1
-  "003" => %w[E008 E009 E001],          # 薬+1（E001応援で余剰）
-  "004" => %w[E010 E011 E015],          # 薬+1（E015応援で余剰）
-  "005" => %w[E013],                    # 薬-1 事-1
-  "006" => %w[E016],                    # 薬-1 事0
-})
-puts "  1/30: 六本松・薬院が余剰、他店舗で不足"
-
-# 1/31（土）- 土曜の偏り
-create_shifts(Date.new(2026, 1, 31), {
-  "001" => %w[E001 E002 E003],          # 薬+1 事0（土曜）
-  "002" => %w[E004],                    # 薬0 事-1
-  "003" => %w[],                        # 薬-1 事-1（誰もいない）
-  "004" => %w[E010 E011],               # 薬0 事0
-  "005" => %w[E012 E013 E014],          # 薬+1 事+1
-  "006" => %w[],                        # 薬-1 事-1（誰もいない）
-})
-puts "  1/31（土）: 六本松・西新が完全不足"
-
-# ==============================
-# 2026年2月のサンプルシフト
-# ==============================
-base_date = Date.new(2026, 2, 3) # 火曜日
-
-5.times do |day_offset|
-  date = base_date + day_offset
-  puts "  Creating shifts for #{date}..."
-
-  case day_offset
-  when 0
-    # 2/3 - 余剰あり（過剰スタッフ発生）
-    # 001: 必要(薬2 事1) → 薬3 事1 で薬剤師が余剰
-    # 002: 必要(薬2 事2) → 薬3 事2 で薬剤師が余剰
-    create_shifts(date, {
-      "001" => %w[E001 E002 E003 E004], # E004を応援で入れて薬剤師+1
-      "002" => %w[E005 E006 E007 E008], # E008を応援で入れて薬剤師+1
-      "003" => %w[E009],                # 不足（薬1事1に対して事務のみ）
-      "004" => %w[E010],                # 不足（薬1事1に対して薬剤師のみ）
-      "005" => %w[E012 E014],            # 不足（薬2事1に対して薬-1）
-      "006" => %w[E015 E016],            # ちょうど
-    })
-
-  when 1
-    # 2/4 - 不足多め
-    create_shifts(date, {
-      "001" => %w[E001 E003],            # 薬剤師-1
-      "002" => %w[E005 E006],            # 薬剤師-1 & 事務-1
-      "003" => %w[E008],                 # 事務-1
-      "004" => %w[E010 E011],
-      "005" => %w[E012],                 # 薬剤師-1 事務-1
-      "006" => %w[E015 E016],
-    })
-
-  when 2
-    # 2/5 - 一部不足
-    create_shifts(date, {
-      "001" => %w[E001 E002 E003],
-      "002" => %w[E004 E005 E006],       # 事務-1
-      "003" => %w[E008 E009],
-      "004" => %w[E010 E011],
-      "005" => %w[E013 E014],            # 薬剤師-1
-      "006" => %w[E015 E016],
-    })
-
-  else
-    # 2/6, 2/7 - ほぼ正常（不足なしに近い）
-    create_shifts(date, {
-      "001" => %w[E001 E002 E003],
-      "002" => %w[E004 E005 E006 E007],
-      "003" => %w[E008 E009],
-      "004" => %w[E010 E011],
-      "005" => %w[E012 E013 E014],
-      "006" => %w[E015 E016],
-    })
-  end
+  create_shifts_for_day(date, assignments)
 end
 
-puts "Seed completed!"
+# --- 第2週 (2/9-2/14): AM/PMで状況が異なるパターン ---
+puts "  2月第2週: AM/PM別パターン"
+
+# 2/9（月）- AM余剰・PM不足
+create_shifts_for_day(Date.new(2026, 2, 9), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :am },         # AM余剰
+    { code: 'E003', period: :am }          # PM事務不足
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :am },         # PM薬剤師不足
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :am }          # PM事務不足
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :pm }          # AM事務不足
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :pm },         # AM薬剤師不足
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 2/10（火）- 全店舗でPM不足傾向
+create_shifts_for_day(Date.new(2026, 2, 10), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :am },
+    { code: 'E003', period: :am }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :am },
+    { code: 'E006', period: :am },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :am },
+    { code: 'E009', period: :am }
+  ],
+  '004' => [
+    { code: 'E010', period: :am },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :am },
+    { code: 'E014', period: :am }
+  ],
+  '006' => [
+    { code: 'E015', period: :am },
+    { code: 'E016', period: :am }
+  ]
+})
+
+# 2/11（水・祝）- 祝日対応（一部休業）
+create_shifts_for_day(Date.new(2026, 2, 11), {
+  '001' => [{ code: 'E001', period: :am }],
+  '002' => [{ code: 'E004', period: :am }],
+  '003' => [],  # 水曜定休
+  '004' => [],
+  '005' => [{ code: 'E012', period: :am }],
+  '006' => []
+})
+
+# 2/12（木）- 全店舗でAM不足傾向
+create_shifts_for_day(Date.new(2026, 2, 12), {
+  '001' => [
+    { code: 'E001', period: :pm },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :pm }
+  ],
+  '002' => [
+    { code: 'E004', period: :pm },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :pm },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :pm },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :pm },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :pm },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :pm }
+  ],
+  '006' => [
+    { code: 'E015', period: :pm },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 2/13（金）- 充足パターン
+create_shifts_for_day(Date.new(2026, 2, 13), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 2/14（土）
+create_shifts_for_day(Date.new(2026, 2, 14), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E006', period: :full_day }
+  ],
+  '003' => [{ code: 'E008', period: :am }],
+  '004' => [{ code: 'E010', period: :am }],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [{ code: 'E015', period: :full_day }]
+})
+
+# --- 第3週 (2/16-2/21): 薬剤師不足週 ---
+puts "  2月第3週: 薬剤師不足週"
+
+# 2/16（月）- 複数店舗で薬剤師不足
+create_shifts_for_day(Date.new(2026, 2, 16), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E003', period: :full_day }    # 薬剤師-1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }    # 薬剤師-1
+  ],
+  '003' => [
+    { code: 'E009', period: :full_day }    # 薬剤師-1
+  ],
+  '004' => [
+    { code: 'E011', period: :full_day }    # 薬剤師-1
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }    # 充足
+  ],
+  '006' => [
+    { code: 'E016', period: :full_day }    # 薬剤師-1
+  ]
+})
+
+# 2/17（火）- 博多駅前店と天神店のみ薬剤師不足
+create_shifts_for_day(Date.new(2026, 2, 17), {
+  '001' => [
+    { code: 'E001', period: :am },         # PM薬剤師-1
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :pm },         # AM薬剤師-1
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 2/18（水）
+create_shifts_for_day(Date.new(2026, 2, 18), {
+  '001' => [
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }    # 薬剤師-1
+  ],
+  '002' => [
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }    # 薬剤師-1
+  ],
+  '003' => [],  # 水曜定休
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E014', period: :full_day }    # 薬剤師-1
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 2/19（木）- 全店舗で深刻な薬剤師不足
+create_shifts_for_day(Date.new(2026, 2, 19), {
+  '001' => [{ code: 'E003', period: :full_day }],    # 薬剤師-2
+  '002' => [
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }              # 薬剤師-2
+  ],
+  '003' => [{ code: 'E009', period: :full_day }],    # 薬剤師-1
+  '004' => [{ code: 'E011', period: :full_day }],    # 薬剤師-1
+  '005' => [{ code: 'E014', period: :full_day }],    # 薬剤師-2
+  '006' => [{ code: 'E016', period: :full_day }]     # 薬剤師-1
+})
+
+# 2/20（金）- 薬剤師余剰店舗あり（応援可能）
+create_shifts_for_day(Date.new(2026, 2, 20), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'M001', period: :full_day },
+    { code: 'E003', period: :full_day }    # 薬剤師+1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }    # 充足
+  ],
+  '003' => [
+    { code: 'E009', period: :full_day }    # 薬剤師-1
+  ],
+  '004' => [
+    { code: 'E011', period: :full_day }    # 薬剤師-1
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }    # 充足
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 2/21（土）
+create_shifts_for_day(Date.new(2026, 2, 21), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E005', period: :full_day },
+    { code: 'E007', period: :full_day }    # 薬剤師-1
+  ],
+  '003' => [{ code: 'E009', period: :am }],  # 薬剤師-1
+  '004' => [{ code: 'E011', period: :am }],  # 薬剤師-1
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [{ code: 'E015', period: :full_day }]
+})
+
+# --- 第4週 (2/23-2/28): 事務不足週 ---
+puts "  2月第4週: 事務不足週"
+
+# 2/23（月・祝）- 祝日対応
+create_shifts_for_day(Date.new(2026, 2, 23), {
+  '001' => [{ code: 'E001', period: :am }],
+  '002' => [
+    { code: 'E004', period: :am },
+    { code: 'E006', period: :am }
+  ],
+  '003' => [],
+  '004' => [],
+  '005' => [{ code: 'E012', period: :am }],
+  '006' => []
+})
+
+# 2/24（火）- 事務不足パターン
+create_shifts_for_day(Date.new(2026, 2, 24), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day }    # 事務-1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day }    # 事務-1
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day }    # 事務-1
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day }    # 事務-1
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day }    # 事務-1
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day }    # 事務-1
+  ]
+})
+
+# 2/25（水）
+create_shifts_for_day(Date.new(2026, 2, 25), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :am }          # PM事務不足
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :am },
+    { code: 'E007', period: :pm }
+  ],
+  '003' => [],  # 水曜定休
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :pm }          # AM事務不足
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :am }          # PM事務不足
+  ]
+})
+
+# 2/26（木）- 両方不足
+create_shifts_for_day(Date.new(2026, 2, 26), {
+  '001' => [
+    { code: 'E001', period: :full_day }    # 薬剤師-1, 事務-1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E006', period: :full_day }    # 薬剤師-1, 事務-1
+  ],
+  '003' => [],                              # 完全不足
+  '004' => [
+    { code: 'E010', period: :am }          # PM両方不足
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :am }          # PM薬剤師-1
+  ],
+  '006' => [
+    { code: 'E015', period: :pm }          # AM薬剤師-1, 事務-1
+  ]
+})
+
+# 2/27（金）- 一部店舗のみ事務余剰
+create_shifts_for_day(Date.new(2026, 2, 27), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day },
+    { code: 'E009', period: :full_day }    # 事務+1（応援）
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day }    # 事務-1
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day }    # 事務-1
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day },
+    { code: 'E011', period: :pm }          # 事務+1（応援）
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day }    # 事務-1
+  ]
+})
+
+# 2/28（土）
+create_shifts_for_day(Date.new(2026, 2, 28), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E006', period: :full_day }
+  ],
+  '003' => [{ code: 'E008', period: :am }],
+  '004' => [{ code: 'E010', period: :am }],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [{ code: 'E016', period: :full_day }]  # 薬剤師-1
+})
+
+# ========================================
+# 3月: 繁忙期と閑散期の混在
+# ========================================
+
+# --- 第1週 (3/2-3/7): 店舗により異なるパターン ---
+puts "  3月第1週: 店舗別パターン"
+
+# 3/2（月）- 博多・天神は余剰、その他は不足
+create_shifts_for_day(Date.new(2026, 3, 2), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'M001', period: :full_day },
+    { code: 'E003', period: :full_day }    # 薬剤師+1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E008', period: :full_day },   # 応援
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }    # 薬剤師+1
+  ],
+  '003' => [],                              # 完全不足
+  '004' => [{ code: 'E011', period: :full_day }],  # 薬剤師-1
+  '005' => [{ code: 'E014', period: :full_day }],  # 薬剤師-2
+  '006' => []                               # 完全不足
+})
+
+# 3/3（火）- 逆パターン
+create_shifts_for_day(Date.new(2026, 3, 3), {
+  '001' => [{ code: 'E003', period: :full_day }],  # 薬剤師-2
+  '002' => [
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }            # 薬剤師-2
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day },
+    { code: 'M001', period: :full_day }            # 応援で薬剤師+1
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/4（水）
+create_shifts_for_day(Date.new(2026, 3, 4), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [],  # 水曜定休
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/5（木）- 午前は充足、午後は不足
+create_shifts_for_day(Date.new(2026, 3, 5), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :am },
+    { code: 'E003', period: :am }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :am },
+    { code: 'E006', period: :am },
+    { code: 'E007', period: :am }
+  ],
+  '003' => [
+    { code: 'E008', period: :am },
+    { code: 'E009', period: :am }
+  ],
+  '004' => [
+    { code: 'E010', period: :am },
+    { code: 'E011', period: :am }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :am },
+    { code: 'E014', period: :am }
+  ],
+  '006' => [
+    { code: 'E015', period: :am },
+    { code: 'E016', period: :am }
+  ]
+})
+
+# 3/6（金）- 午前は不足、午後は充足
+create_shifts_for_day(Date.new(2026, 3, 6), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :pm },
+    { code: 'E003', period: :pm }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :pm },
+    { code: 'E006', period: :pm },
+    { code: 'E007', period: :pm }
+  ],
+  '003' => [
+    { code: 'E008', period: :pm },
+    { code: 'E009', period: :pm }
+  ],
+  '004' => [
+    { code: 'E010', period: :pm },
+    { code: 'E011', period: :pm }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :pm },
+    { code: 'E014', period: :pm }
+  ],
+  '006' => [
+    { code: 'E015', period: :pm },
+    { code: 'E016', period: :pm }
+  ]
+})
+
+# 3/7（土）
+create_shifts_for_day(Date.new(2026, 3, 7), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E006', period: :full_day }
+  ],
+  '003' => [{ code: 'E008', period: :am }],
+  '004' => [{ code: 'E010', period: :am }],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [{ code: 'E015', period: :full_day }]
+})
+
+# --- 第2週 (3/9-3/14): 余剰週（閑散期） ---
+puts "  3月第2週: 余剰週"
+
+# 3/9（月）- 全店舗で余剰
+create_shifts_for_day(Date.new(2026, 3, 9), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'M001', period: :full_day },
+    { code: 'E003', period: :full_day }        # 薬剤師+1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }        # 充足
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }        # 充足
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }        # 充足
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }        # 充足
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }        # 充足
+  ]
+})
+
+# 3/10（火）
+create_shifts_for_day(Date.new(2026, 3, 10), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'M001', period: :am },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/11（水）
+create_shifts_for_day(Date.new(2026, 3, 11), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [],  # 水曜定休
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/12（木）- 特定店舗のみ薬剤師余剰
+create_shifts_for_day(Date.new(2026, 3, 12), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'M001', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/13（金）- 特定店舗のみ事務余剰
+create_shifts_for_day(Date.new(2026, 3, 13), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day },
+    { code: 'M001', period: :pm }          # 薬剤師応援
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/14（土）
+create_shifts_for_day(Date.new(2026, 3, 14), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :am },
+    { code: 'E009', period: :am }
+  ],
+  '004' => [
+    { code: 'E010', period: :am },
+    { code: 'E011', period: :am }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# --- 第3週 (3/16-3/21): 繁忙期（大規模不足） ---
+puts "  3月第3週: 繁忙期"
+
+# 3/16（月）- 全店舗で不足（繁忙期スタート）
+create_shifts_for_day(Date.new(2026, 3, 16), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E003', period: :am }          # 薬剤師-1, PM事務-1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E006', period: :pm }          # 薬剤師-1, AM事務-1
+  ],
+  '003' => [{ code: 'E009', period: :full_day }],  # 薬剤師-1
+  '004' => [{ code: 'E011', period: :pm }],        # AM両方-1
+  '005' => [
+    { code: 'E012', period: :am },
+    { code: 'E014', period: :pm }          # 全時間帯薬剤師-1
+  ],
+  '006' => [{ code: 'E016', period: :am }]         # PM両方-1
+})
+
+# 3/17（火）- 深刻な不足
+create_shifts_for_day(Date.new(2026, 3, 17), {
+  '001' => [{ code: 'E001', period: :am }],        # PM全員-1以上
+  '002' => [{ code: 'E004', period: :pm }],        # AM全員-1以上
+  '003' => [],                                      # 完全不足
+  '004' => [],                                      # 完全不足
+  '005' => [{ code: 'E012', period: :full_day }],  # 薬剤師-1, 事務-1
+  '006' => []                                       # 完全不足
+})
+
+# 3/18（水）
+create_shifts_for_day(Date.new(2026, 3, 18), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :am }          # PM薬剤師-1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :pm },
+    { code: 'E006', period: :am }
+  ],
+  '003' => [],  # 水曜定休
+  '004' => [{ code: 'E010', period: :full_day }],  # 事務-1
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E014', period: :am }
+  ],
+  '006' => [{ code: 'E015', period: :pm }]         # AM薬剤師-1
+})
+
+# 3/19（木）- 一部店舗に応援
+create_shifts_for_day(Date.new(2026, 3, 19), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [{ code: 'E009', period: :full_day }],  # 薬剤師-1
+  '004' => [{ code: 'E011', period: :full_day }],  # 薬剤師-1
+  '005' => [
+    { code: 'E014', period: :full_day }            # 薬剤師-2
+  ],
+  '006' => [{ code: 'E016', period: :full_day }]   # 薬剤師-1
+})
+
+# 3/20（金・祝）- 祝日対応
+create_shifts_for_day(Date.new(2026, 3, 20), {
+  '001' => [{ code: 'E001', period: :am }],
+  '002' => [{ code: 'E004', period: :am }],
+  '003' => [],
+  '004' => [],
+  '005' => [{ code: 'E012', period: :am }],
+  '006' => []
+})
+
+# 3/21（土）
+create_shifts_for_day(Date.new(2026, 3, 21), {
+  '001' => [{ code: 'E001', period: :full_day }],  # 事務-1
+  '002' => [{ code: 'E004', period: :full_day }],  # 薬剤師-1, 事務-1
+  '003' => [],                                      # 不足
+  '004' => [],                                      # 不足
+  '005' => [{ code: 'E012', period: :full_day }],  # 薬剤師-1
+  '006' => []                                       # 不足
+})
+
+# --- 第4週 (3/23-3/28): 繁忙期終盤 ---
+puts "  3月第4週: 繁忙期終盤"
+
+# 3/23（月）- 一部回復
+create_shifts_for_day(Date.new(2026, 3, 23), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :am },
+    { code: 'E007', period: :pm }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :am }
+  ],
+  '004' => [
+    { code: 'E010', period: :pm },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :am },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :pm }
+  ]
+})
+
+# 3/24（火）- さらに回復
+create_shifts_for_day(Date.new(2026, 3, 24), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :am }          # PM事務-1
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :pm }          # AM事務-1
+  ],
+  '006' => [
+    { code: 'E015', period: :am },         # PM薬剤師-1
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/25（水）
+create_shifts_for_day(Date.new(2026, 3, 25), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [],  # 水曜定休
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/26（木）- 完全充足
+create_shifts_for_day(Date.new(2026, 3, 26), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/27（金）- 余剰傾向（年度末対応）
+create_shifts_for_day(Date.new(2026, 3, 27), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'M001', period: :full_day },
+    { code: 'E003', period: :full_day }        # 薬剤師+1
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/28（土）
+create_shifts_for_day(Date.new(2026, 3, 28), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :am },
+    { code: 'E009', period: :am }
+  ],
+  '004' => [
+    { code: 'E010', period: :am },
+    { code: 'E011', period: :am }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# --- 第5週 (3/30-3/31): 年度末 ---
+puts "  3月第5週: 年度末"
+
+# 3/30（月）- 最終週スタート
+create_shifts_for_day(Date.new(2026, 3, 30), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :full_day },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :full_day },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :full_day }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :full_day }
+  ],
+  '004' => [
+    { code: 'E010', period: :full_day },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :full_day },
+    { code: 'E014', period: :full_day }
+  ],
+  '006' => [
+    { code: 'E015', period: :full_day },
+    { code: 'E016', period: :full_day }
+  ]
+})
+
+# 3/31（火）- 年度末
+create_shifts_for_day(Date.new(2026, 3, 31), {
+  '001' => [
+    { code: 'E001', period: :full_day },
+    { code: 'E002', period: :am },
+    { code: 'M001', period: :pm },
+    { code: 'E003', period: :full_day }
+  ],
+  '002' => [
+    { code: 'E004', period: :full_day },
+    { code: 'E005', period: :am },
+    { code: 'E006', period: :full_day },
+    { code: 'E007', period: :pm }
+  ],
+  '003' => [
+    { code: 'E008', period: :full_day },
+    { code: 'E009', period: :am }
+  ],
+  '004' => [
+    { code: 'E010', period: :pm },
+    { code: 'E011', period: :full_day }
+  ],
+  '005' => [
+    { code: 'E012', period: :full_day },
+    { code: 'E013', period: :pm },
+    { code: 'E014', period: :am }
+  ],
+  '006' => [
+    { code: 'E015', period: :am },
+    { code: 'E016', period: :pm }
+  ]
+})
+
+puts ""
+puts "=== Seed completed! ==="
+puts ""
+puts "ログイン情報:"
+puts "  管理者: ADMIN"
+puts "  エリアマネージャー: M001"
+puts "  店舗管理者: E001, E004"
+puts "  一般スタッフ: E002〜E016"
+puts ""

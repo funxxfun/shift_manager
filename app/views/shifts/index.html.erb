@@ -67,6 +67,7 @@
           border_color = case store[:combined_status]
                          when :shortage then 'border-red-500'
                          when :surplus then 'border-green-500'
+                         when :closed then 'border-gray-400'
                          else 'border-gray-300'
                          end
         %>
@@ -83,15 +84,18 @@
                 status_class = case period_data[:status]
                                when :shortage then 'bg-red-100 text-red-700'
                                when :surplus then 'bg-green-100 text-green-700'
+                               when :closed then 'bg-gray-200 text-gray-500'
                                else 'bg-gray-100 text-gray-600'
                                end
                 status_text = case period_data[:status]
                               when :shortage then '不足'
                               when :surplus then '余剰'
+                              when :closed then '休業'
                               else '充足'
                               end
                 period_label = period == :am ? '🌅 AM' : '🌆 PM'
                 period_bg = period == :am ? 'bg-blue-50' : 'bg-orange-50'
+                period_bg = 'bg-gray-100 opacity-60' if period_data[:status] == :closed
               %>
               <div class="<%= period_bg %> rounded-lg p-3">
                 <div class="flex justify-between items-center mb-2">

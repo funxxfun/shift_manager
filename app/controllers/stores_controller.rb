@@ -13,9 +13,7 @@ class StoresController < ApplicationController
 
   def new
     @store = Store.new
-    @store.store_requirements.build(day_type: :weekday)
-    @store.store_requirements.build(day_type: :saturday)
-    @store.store_requirements.build(day_type: :holiday)
+    build_requirements(@store)
   end
 
   def create
@@ -29,15 +27,8 @@ class StoresController < ApplicationController
   end
 
   def edit
-    # 関連を明示的にロード
     @store.store_requirements.load
-
-    # 不足している曜日タイプがあれば追加
-    %i[weekday saturday holiday].each do |day_type|
-      unless @store.store_requirements.any? { |r| r.day_type == day_type.to_s }
-        @store.store_requirements.build(day_type: day_type)
-      end
-    end
+    build_requirements(@store)
   end
 
   def update
@@ -68,7 +59,18 @@ class StoresController < ApplicationController
   def store_params
     params.require(:store).permit(
       :code, :name, :address, :nearest_station,
-      store_requirements_attributes: [:id, :day_type, :pharmacist_count, :clerk_count, :_destroy]
+      store_requirements_attributes: [:id, :day_of_week, :shift_period, :pharmacist_count, :clerk_count, :_destroy]
     )
+  end
+
+  def build_requirements(store)
+    # 7曜日 × 2時間帯（AM/PM）= 14レコード
+    (0..6).each do |day|
+      [:am, :pm].each do |period|
+        unless store.store_requirements.any? { |r| r.day_of_week == day && r.shift_period == period.to_s }
+          store.store_requirements.build(day_of_week: day, shift_period: period)
+        end
+      end
+    end
   end
 end
