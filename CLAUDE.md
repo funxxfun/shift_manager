@@ -23,8 +23,10 @@
 | 機能 | 状態 |
 |------|------|
 | CSVインポート | 実装済み |
-| 過不足算出・表示 | 実装済み |
+| 過不足算出・表示（AM/PM別） | 実装済み |
+| 月間シフト一覧 | 実装済み |
 | AI補填提案 | 実装済み |
+| 応援要請・承認フロー | 実装済み |
 | ユーザー認証・権限 | 実装済み |
 | 店舗間共有 | 未実装（クラウドデプロイで実現） |
 
@@ -91,8 +93,9 @@ docs/
 
 ### 機能仕様
 
+- [docs/features/README.md](docs/features/README.md) - **機能一覧・画面一覧・権限マトリクス**
 - [docs/features/shift_display.md](docs/features/shift_display.md) - シフト表示
-- [docs/features/ai_suggestion.md](docs/features/ai_suggestion.md) - AI補填提案
+- [docs/features/ai_suggestion.md](docs/features/ai_suggestion.md) - AI補填提案・応援要請
 - [docs/features/csv_import.md](docs/features/csv_import.md) - CSVインポート
 
 ### ガイド
